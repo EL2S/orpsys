@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salimamoud ERP Système</title>
+    <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
+    <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+  </head>
+
+  <body>
+    <main>
+      <div class="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+        <div class="fixed inset-0 bg-black/50 z-20 lg:hidden"></div>
+        <aside class="fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out translate-x-0">
+          <div class="h-full flex flex-col">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+              <h2 class="text-xl font-bold text-amber-600">Salimamoud</h2><button class="lg:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x h-5 w-5 text-slate-500">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+              {% if 'noyau.view_dashboard' in user.get_all_permissions %}
+                <a href="{% url 'view_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard h-5 w-5 text-amber-600">
+                    <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+                    <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+                  </svg>Vue d'ensemble
+                </a>
+              {% endif %}
+              {% if 'noyau.view_pos' in user.get_all_permissions %}
+              <a href="{% url 'view_pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
+                  <circle cx="8" cy="21" r="1"></circle>
+                  <circle cx="19" cy="21" r="1"></circle>
+                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+                </svg>Caisse
+              </a>
+              {% endif %}
+              {% if 'noyau.view_leave' in user.get_all_permissions %}
+                <a href="{% url 'view_leave' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
+                    <path d="M8 2v4"></path>
+                    <path d="M16 2v4"></path>
+                    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                    <path d="M3 10h18"></path>
+                  </svg>Congés
+                </a>
+              {% endif %}
+              {% if 'noyau.view_employer' in user.get_all_permissions %}
+                <a href="{% url 'view_employer' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-slate-400">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>Employés
+                </a>
+              {% endif %}
+              {% if 'noyau.view_attendance' in user.get_all_permissions %}
+                <a href="{% url 'view_attendance' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-slate-400">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>Pointage
+                </a>
+              {% endif %}
+              {% if 'noyau.view_loyalty' in user.get_all_permissions %}
+                <a href="{% url 'view_loyalty' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-5 w-5 text-slate-400">
+                    <rect width="20" height="14" x="2" y="5" rx="2"></rect>
+                    <line x1="2" x2="22" y1="10" y2="10"></line>
+                  </svg>Fidélité
+                </a>
+              {% endif %}
+              {% if 'noyau.view_saleproduct' in user.get_all_permissions %}
+                <a href="{% url 'view_saleproduct' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
+                    <path d="m15 11-1 9"></path>
+                    <path d="m19 11-4-7"></path>
+                    <path d="M2 11h20"></path>
+                    <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path>
+                    <path d="M4.5 15.5h15"></path>
+                    <path d="m5 11 4-7"></path>
+                    <path d="m9 11 1 9"></path>
+                  </svg>Produits
+                </a>
+              {% endif %}
+              {% if 'noyau.view_rawmaterial' in user.get_all_permissions %}
+                <a href="{% url 'view_rawmaterial' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-5 w-5 text-slate-400">
+                    <path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path>
+                    <path d="M12 22V12"></path>
+                    <path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path>
+                    <path d="m7.5 4.27 9 5.15"></path>
+                  </svg>Stocks
+                </a>
+              {% endif %}
+              {% if 'noyau.view_production' in user.get_all_permissions %}
+                <a href="{% url 'view_production' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chef-hat h-5 w-5 text-slate-400">
+                    <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"></path>
+                    <path d="M6 17h12"></path>
+                  </svg>Production
+                </a>
+              {% endif %}
+            </nav>
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700">
+              <div class="flex items-center gap-3 mb-4 px-2">
+                <div class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">{{first_letter}}</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{first_name}} {{last_name}}</p>
+                  <p class="text-xs text-slate-500 truncate capitalize">{{role}}</p>
+                </div>
+              </div>
+              <button data-slot="button" class="button-logout inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3 w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100 bg-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out mr-2 h-4 w-4">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" x2="9" y1="12" y2="12"></line>
+                </svg>Déconnexion
+              </button>
+            </div>
+          </div>
+        </aside>
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center px-4 lg:px-8 justify-between lg:justify-end">
+            <button class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu h-6 w-6">
+                <line x1="4" x2="20" y1="12" y2="12"></line>
+                <line x1="4" x2="20" y1="6" y2="6"></line>
+                <line x1="4" x2="20" y1="18" y2="18"></line>
+              </svg>
+            </button><div class="flex items-center gap-4">
+              <span class="text-sm text-slate-500 hidden sm:inline-block">vendredi 21 novembre 2025</span>
+            </div>
+          </header>
+          <div class="flex-1 overflow-auto p-4 lg:p-8">
+            <div class="min-h-screen bg-gradient-to-br from-background to-muted">
+              <header class="border-b bg-card sticky top-0 z-10 shadow-sm">
+                <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center logo-icon">
+                      <img src="{% static 'img/logo/salimamoud-white.png' %}" alt="Salimamoud Logo"/>
+                    </div>
+                    <div>
+                      <h1 class="text-xl font-bold leading-none">Salimamoud</h1><p class="text-xs text-muted-foreground mt-1">Bienvenue,</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <div class="hidden md:block text-right">
+                      <p class="text-sm font-medium">vendredi 21 novembre</p>
+                      <p class="text-xs text-muted-foreground">{{role}}</p>
+                    </div><button data-slot="button" class="button-logout inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out mr-2 h-4 w-4">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" x2="9" y1="12" y2="12"></line>
+                      </svg>Déconnexion
+                    </button>
+                  </div>
+                </div>
+              </header>
+              {% block content %}{% endblock %}
+            </div>
+          </div>
+        </main>
+      </div>
+    </main>
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/noyau/' %}{% block script %}{% endblock %}"></script>
+  </body>
+</html>

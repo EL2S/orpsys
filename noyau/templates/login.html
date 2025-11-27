@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salimamoud ERP Système</title>
+
+    <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
+    <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+  </head>
+
+  <body>
+    <main>
+      <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <div class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 w-full max-w-md shadow-xl">
+          <!-- Header -->
+          <div class="grid auto-rows-min items-start gap-2 px-6 text-center space-y-3">
+            <div class="mx-auto w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
+              <img src="{% static 'img/logo/salimamoud-white.png' %}" alt="Salimamoud Logo" class="logo-img" />
+            </div>
+
+            <div class="text-3xl font-bold">Salimamoud</div>
+            <div class="text-muted-foreground text-sm">Système de gestion intégré</div>
+          </div>
+
+          <!-- Content -->
+          <div class="px-6">
+            <!-- Tabs Container -->
+            <div class="flex flex-col gap-2 w-full">
+              <!-- Tabs -->
+              <div class="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid w-full grid-cols-2">
+                <button id="btn-badge" class="inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium bg-background">Badge</button>
+
+                <button id="btn-password" class="inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium">Mot de passe</button>
+              </div>
+
+              <!-- Tab Content -->
+              <div class="flex-1 space-y-4 mt-6" id="tab-badge">
+                <div class="flex flex-col items-center space-y-6 p-4 border-2 border-dashed rounded-xl bg-muted/30">
+                  <div class="w-32 h-32 rounded-full flex items-center justify-center bg-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan w-16 h-16 text-muted-foreground">
+                      <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                      <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                      <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                      <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                    </svg>
+                  </div>
+
+                  <div class="text-center space-y-2">
+                    <h3 class="font-medium text-lg">Scannez votre badge</h3>
+                    <p class="text-sm text-muted-foreground">Approchez votre badge du lecteur</p>
+                  </div>
+
+                  <!-- Hidden input for auto-read badge -->
+                  <form class="w-full opacity-0 h-0 overflow-hidden">
+                    <input class="h-9 w-full rounded-md border px-3 py-1 bg-transparent" type="text" id="scan" name="scan"/>
+                  </form>
+                </div>
+              </div>
+
+              <div class="flex-1 outline-none space-y-4 mt-6" id="tab-password">
+                <form class="space-y-4" method="POST">
+                  {% csrf_token %}
+                  <!-- Employee ID -->
+                  <div class="space-y-2">
+                    <label data-slot="label" for="employeeId" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">ID Employé</label>
+
+                    <input name="username" id="employeeId" placeholder="EMP001" required class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" />
+                  </div>
+
+                  <!-- Password -->
+                  <div class="space-y-2">
+                    <label for="password" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">Mot de passe</label>
+
+                    <input id="password" name="password" type="password" placeholder="••••••••" required class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" />
+                  </div>
+
+                  <!-- Submit Button -->
+                  <button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3 w-full">Se connecter</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="{% static 'js/login.js' %}"></script>
+  </body>
+</html>

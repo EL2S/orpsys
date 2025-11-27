@@ -1,0 +1,238 @@
+{% extends 'base.html' %} {% load static %} 
+{% block script %}production/view_production.js{% endblock %} 
+{% block content %}
+<div class="container mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <a
+            href="{% url 'view_dashboard' %}"
+            data-slot="button"
+            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-arrow-left h-4 w-4"
+                >
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+
+            <h1 class="text-3xl font-bold">Catalogue des produits</h1>
+        </div>
+        <input type="hidden" id="products_json" value="{{ products_json }}">
+        {% csrf_token %}
+    </div>
+    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" class="flex flex-col gap-2 w-full" >
+        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" class="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid w-full grid-cols-2 mb-6" tabindex="0" data-orientation="horizontal" style="outline: none" >
+            <button type="button" role="tab" aria-selected="true" aria-controls="today-button" data-state="active" id="today-button" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4" tabindex="0" data-orientation="horizontal" data-radix-collection-item="" >
+                Aujourd'hui
+            </button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="all-button" data-state="inactive" id="all-button" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4" tabindex="-1" data-orientation="horizontal" data-radix-collection-item="" >
+                Toutes Productions
+            </button>
+        </div>
+    </div>
+    <div data-state="active" data-orientation="horizontal" role="tabpanel" aria-labelledby="today-button" id="today-button" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4" style="" >
+        <div class="flex justify-end">
+            <button id="start-production" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chef-hat mr-2 h-4 w-4">
+                    <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"></path><path d="M6 17h12"></path>
+                </svg>Lancer Production
+            </button>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm" >
+            <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6" >
+                <div data-slot="card-title" class="leading-none font-semibold">
+                    Stock Produits Finis
+                </div>
+                <div data-slot="card-description" class="text-muted-foreground text-sm">
+                    Produits disponibles à la vente (Périssables et Durables)
+                </div>
+            </div>
+            <div data-slot="card-content" class="px-6">
+                <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                    <table data-slot="table" class="w-full caption-bottom text-sm" id="todayTable">
+                        <thead data-slot="table-header" class="[&_tr]:border-b">
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors" >
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Nom
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Date
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Prix Unitaire
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Stock Prévue
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Stock Vendue
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Stock Restante
+                                </th>
+                                {% if 'noyau.change_production' in user.get_all_permissions or 'noyau.delete_production' in user.get_all_permissions %}
+                                    <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+
+                        <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+                            {% for prod in productions_today%}
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors" >
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">
+                                    {{prod.product.name}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.date|date:"d/m/Y"}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.product.unit_price}} KMF
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.planned_quantity}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.sold_quantity}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.remaining_quantity}}
+                                </td>
+                                {% if 'noyau.change_production' in user.get_all_permissions or 'noyau.delete_production' in user.get_all_permissions %}
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
+                                    <div class="flex justify-end gap-1">
+                                    {% if 'noyau.change_production' in user.get_all_permissions%}
+                                    <button data-id="{{prod.id}}" data-slot="button" class="increase-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 bg-transparent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen h-4 w-4">
+                                            <path d="M12 19v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                            <path d="M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                        </svg>
+                                    </button>
+                                    <button data-id="{{prod.id}}" data-slot="button" class="decrease-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen h-4 w-4">
+                                            <path d="M12 5v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                            <path d="M19 12l-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                        </svg>
+
+                                    </button>
+                                    {% endif %}
+                                    {% if 'noyau.delete_production' in user.get_all_permissions %}
+                                    <button data-id="{{prod.id}}" data-slot="button" class="delete-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 h-4 w-4">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                        <line x1="10" x2="10" y1="11" y2="17"></line>
+                                        <line x1="14" x2="14" y1="11" y2="17"></line>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">Aucun produit trouvé.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="all-button" id="all-button" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4" hidden="" >   
+        <div class="flex justify-end">
+            <div class="relative w-64">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2 top-2.5 h-4 w-4 text-muted-foreground">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input data-slot="input" id="searchInput" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-8" placeholder="Rechercher..." >
+            </div>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm" >
+            <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6" >
+                <div data-slot="card-title" class="leading-none font-semibold">
+                    Stock Produits Finis
+                </div>
+                <div data-slot="card-description" class="text-muted-foreground text-sm">
+                    Produits disponibles à la vente (Périssables et Durables)
+                </div>
+            </div>
+            <div data-slot="card-content" class="px-6">
+                <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                    <table data-slot="table" class="w-full caption-bottom text-sm" id="productionTable">
+                        <thead data-slot="table-header" class="[&_tr]:border-b">
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors" >
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Nom
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Date
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Prix Unitaire
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Stock Prévue
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">
+                                    Stock Vendue
+                                </th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-right">
+                                    Stock Restante
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+                            {% for prod in productions%}
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors" >
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">
+                                    {{prod.product.name}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.date|date:"d/m/Y"}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.product.unit_price}} KMF
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.planned_quantity}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                    {{prod.sold_quantity}}
+                                </td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">
+                                    {{prod.remaining_quantity}}
+                                </td>
+                            </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">Aucun produit trouvé.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="modalContainer"></div>
+{% endblock %}
