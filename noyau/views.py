@@ -17,7 +17,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 import locale
 from django.contrib.auth.models import User, Group, Permission
-from noyau.models import Attendance, Employer, Leave, Loyalty, Production, RawMaterial, SaleProduct, SaleTransaction, SaleTransactionItem
+from noyau.models import Attendance, DayOff, Employer, EmployerShift, Leave, Loyalty, Production, RawMaterial, SaleProduct, SaleTransaction, SaleTransactionItem, Shift
 from django.core.files.storage import default_storage
 # Définit la locale française
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
@@ -149,7 +149,7 @@ def view_employer(request):
         )
 
     noyau_and_auth_content_types = ContentType.objects.filter(Q(app_label="noyau")).exclude(
-        model__in=["shift", "dayoff" , "saletransactionItem", "penalty"]
+        model__in=["shift", "dayoff" , "saletransactionItem", "penalty", "employershift"]
     )
 
     permissions = Permission.objects.filter(
@@ -316,7 +316,8 @@ def view_employer(request):
             Employer.objects.create(
                 user=add_user, role=role, salary=salary, badge_id=new_badge_id
             )
-        elif type == "change":
+            
+        if type == "change":
             employer_id = request.POST.get("employer_id", "").strip()
             employer = get_object_or_404(Employer, id=employer_id)
             old_user = get_object_or_404(User, id=employer.user_id)
@@ -356,7 +357,7 @@ def get_employer(request, employer_id):
         old_user = get_object_or_404(User, id=employer.user_id)
 
         noyau_and_auth_content_types = ContentType.objects.filter(Q(app_label="noyau")).exclude(
-            model__in=["shift", "dayoff", "saletransactionItem", "penalty"]
+            model__in=["shift", "dayoff", "saletransactionItem", "penalty", "employershift"]
         )
 
         user_permissions = old_user.user_permissions.filter(
@@ -438,6 +439,7 @@ def get_employer(request, employer_id):
             "permissions": permissions_data,
             "user_permissions": permissions_employer,
             "setting": employer.setting,
+            "badge_id": employer.badge_id,
         }
         return JsonResponse({"success": True, "employer": data})
     except Employer.DoesNotExist:
@@ -1170,21 +1172,202 @@ def view_attendance(request):
     attendances = Attendance.objects.order_by('-date').all()
     data = []
     for attendance in attendances:
-        employer = Employer.objects.filter(employer=attendance.employer).first()
-        user = User.objects.filter(employer=employer.user).first()
         data.append({
             'id': attendance.id,
-            'username': user.username,
+            'username': attendance.employer.user.username,
             'date': attendance.date.strftime('%d/%m/%Y'),
             'clock_in': attendance.clock_in,
             'clock_out': attendance.clock_out,
             'status': attendance.status,
+        })
+    
+    shifts = Shift.objects.order_by('start_time','end_time').all()
+    dataShift = []
+    number = 0
+    for shift in shifts:
+        number += 1
+        dataShift.append({
+            'id': shift.id,
+            'start_time': shift.start_time.strftime("%H h %M"),
+            'end_time': shift.end_time.strftime("%H h %M"),
+            'number': number,
+        })
+    
+    dayoffs = DayOff.objects.order_by('-id').all()
+    dataDayOff = []
+    items = []
+    for dayoff in dayoffs:
+        employerShifts = EmployerShift.objects.filter(employer=dayoff.employer)
+        for sh in employerShifts:
+            items.append({
+                'items': f"De {sh.shift.start_time.strftime("%H h %M")} à {sh.shift.end_time.strftime("%H h %M")}",
+            })
+        
+        dataDayOff.append({
+            'id': dayoff.id,
+            'username': dayoff.employer.user.username,
+            'name': f"{dayoff.employer.user.first_name} {dayoff.employer.user.last_name}",
+            'day': dayoff.day,
+            'shifts': items
+        })
+    
+    dayoffs_ids = dayoffs.values_list("employer_id", flat=True)
+    employees_data = list(
+        Employer.objects.select_related("user")
+        .filter(Q(user__username__regex=r"^CAS\d+$") |  Q(user__username__regex=r"^EMP\d+$") |  Q(user__username__regex=r"^MAN\d+$"))
+        .exclude(id__in=dayoffs_ids)
+        .order_by("user__username")
+        .values("id", "user__username")
+    )
+    
+    badges = Employer.objects.select_related("user").filter(
+        Q(user__username__regex=r"^CAS\d+$") |  Q(user__username__regex=r"^EMP\d+$") |  Q(user__username__regex=r"^MAN\d+$")
+    ).order_by("badge_id")
+    
+    badges_data = []
+    for badge in badges:
+        dayoff = DayOff.objects.filter(employer=badge).first()
+        badges_data.append({
+            'id': badge.id,
+            'badge_id': badge.badge_id,
+            'dayoff_id': dayoff.id,
+            'setting': badge.setting
         })
     context = {
         "first_name": first_name,
         "last_name": last_name,
         "first_letter": first_letter,
         "role": getattr(getattr(current_user, "employer", None), "role", None),
+        "shifts":dataShift,
+        "dayoffs":dataDayOff,
+        "attendances":data,
+        "employees": json.dumps(employees_data),
+        "shifts_json": json.dumps(dataShift),
+        "badges": json.dumps(badges_data),
     }
+    if request.method == "POST":
+        type = request.POST.get("type", "").strip()
+        if type == "add-shift":
+            start_time = request.POST.get("start_time", "").strip()
+            end_time = request.POST.get("end_time", "").strip()
+            Shift.objects.create(
+                start_time=start_time,
+                end_time=end_time
+            )
+        if type == "change-shift":
+            start_time = request.POST.get("start_time", "").strip()
+            end_time = request.POST.get("end_time", "").strip()
+            shift_id = request.POST.get("shift_id", "").strip()
+            shift = get_object_or_404(Shift, id=shift_id)
+            shift.start_time=start_time
+            shift.end_time=end_time
+            shift.save()
+        if type == "add-dayoff":
+            day = request.POST.get("day", "").strip()
+            employer_id = int(request.POST.get("employer_id", "").strip())
+            aut_rem_options = request.POST.getlist("aut_rem")
+            DayOff.objects.create(
+                employer_id=employer_id,
+                day=day
+            )
+            for shift_id in aut_rem_options:
+                EmployerShift.objects.create(
+                    employer_id=employer_id,
+                    shift_id=shift_id
+                )
+        if type == "change-dayoff":
+            day = request.POST.get("day", "").strip()
+            employer_id = int(request.POST.get("employer_id", "").strip())
+            aut_rem_options = request.POST.getlist("aut_rem")
+            dayoff_id = request.POST.get("dayoff_id", "").strip()
+            dayoff = get_object_or_404(DayOff, id=dayoff_id)
+            dayoff.employer_id=employer_id
+            dayoff.day=day
+            dayoff.save()
+            
+            EmployerShift.objects.filter(
+                employer_id=employer_id
+            ).delete()
+            
+            for shift_id in aut_rem_options:
+                EmployerShift.objects.create(
+                    employer_id=employer_id,
+                    shift_id=shift_id
+                )
+        if type == "import-attendance":
+            excel = request.FILES.get("excel-file")
+            
+        return redirect("view_attendance")
     return render(request, "attendance/view_attendance.html", context)
 
+@csrf_exempt
+def get_shift(request, shift_id):
+    update_stock(request)
+    try:
+        shift = Shift.objects.get(id=shift_id)
+        data = {
+            'start_time': shift.start_time.strftime("%H:%M"),
+            'end_time': shift.end_time.strftime("%H:%M"),
+        }
+        return JsonResponse({"success": True, "shift": data})
+    except Shift.DoesNotExist:
+        return JsonResponse({"error": "Horaire introuvable."}, status=404)
+
+@permission_required("noyau.view_attendance", raise_exception=True)
+def delete_shift(request, shift_id):
+    update_stock(request)
+    shift = get_object_or_404(Shift, id=shift_id)
+    shift.delete()
+    return redirect("view_attendance")
+
+@csrf_exempt
+def get_dayoff(request, dayoff_id):
+    update_stock(request)
+    try:
+        dayoff = DayOff.objects.get(id=dayoff_id)
+        employerShifts = EmployerShift.objects.filter(employer=dayoff.employer)
+        shifts_ids = employerShifts.values_list("shift_id", flat=True)
+        shifts = Shift.objects.order_by('start_time','end_time').exclude(id__in=shifts_ids)
+        dataShift = []
+        for shift in shifts:
+            dataShift.append({
+                'id': shift.id,
+                'start_time': shift.start_time.strftime("%H h %M"),
+                'end_time': shift.end_time.strftime("%H h %M"),
+            })
+            
+        employerShift = []
+        for shift in employerShifts:
+            employerShift.append({
+                'id': shift.shift.id,
+                'start_time': shift.shift.start_time.strftime("%H h %M"),
+                'end_time': shift.shift.end_time.strftime("%H h %M"),
+            })
+        
+        dayoffs = DayOff.objects.order_by('-id').all().exclude(id=dayoff_id)
+        dayoffs_ids = dayoffs.values_list("employer_id", flat=True)
+        employees_data = list(
+            Employer.objects.select_related("user")
+            .filter(Q(user__username__regex=r"^CAS\d+$") |  Q(user__username__regex=r"^EMP\d+$") |  Q(user__username__regex=r"^MAN\d+$"))
+            .exclude(id__in=dayoffs_ids)
+            .order_by("user__username")
+            .values("id", "user__username")
+        )
+        
+        data = {
+            'day': dayoff.day,
+            'employer': dayoff.employer.id,
+            'shifts': dataShift,
+            'employerShifts': employerShift,
+            'employees':employees_data
+        }
+        return JsonResponse({"success": True, "dayoff": data})
+    except DayOff.DoesNotExist:
+        return JsonResponse({"error": "Horaire introuvable."}, status=404)
+
+@permission_required("noyau.view_attendance", raise_exception=True)
+def delete_dayoff(request, dayoff_id):
+    update_stock(request)
+    dayoff = get_object_or_404(DayOff, id=dayoff_id)
+    dayoff.delete()
+    return redirect("view_attendance")

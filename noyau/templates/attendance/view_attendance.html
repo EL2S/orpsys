@@ -28,7 +28,9 @@
 
                 <h1 class="text-3xl font-bold">Pointage & Présence</h1>
             </div>
-            <input type="hidden" id="products_json" value="{{ products_json }}">
+            <input type="hidden" id="employees" value="{{ employees }}">
+            <input type="hidden" id="shifts_json" value="{{ shifts_json }}">
+            <input type="hidden" id="badges" value="{{ badges }}">
             {% csrf_token %}
         </div>
         <div dir="ltr" data-orientation="horizontal" data-slot="tabs" class="flex flex-col gap-2 w-full" >
@@ -67,7 +69,7 @@
                                 N° Employé, Date, Arrivée, Départ
                             </p>
                         </div>
-                        <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full bg-green-600 hover:bg-green-700">
+                        <button data-slot="button" id="import-attendance" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full bg-green-600 hover:bg-green-700">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in mr-2 h-4 w-4">
                                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                                 <polyline points="10 17 15 12 10 7"></polyline>
@@ -153,169 +155,196 @@
                 </div>
             </div>
         </div>
-        <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="schedule-button" id="schedule-button" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4" hidden="" >   
-            <div class="flex justify-end">
-                <div class="relative w-64">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2 top-2.5 h-4 w-4 text-muted-foreground">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                    </svg>
-                    <input data-slot="input" id="searchInput" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-8" placeholder="Rechercher..." >
-                </div>
-            </div>
+        <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="schedule-button" id="schedule-button" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4" hidden="" > 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm md:col-span-2">
-                    <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex flex-col gap-2">
-                                <div data-slot="card-title" class="leading-none font-semibold">
-                                    Horaires de travail
+                <div class="flex flex-col gap-6 md:col-span-1">
+                    <div class="flex justify-start gap-1">
+                        <button id="add-shift" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                            </svg>Nouvel Horaire
+                        </button>
+                    </div>
+                    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                        <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex flex-col gap-2">
+                                    <div data-slot="card-title" class="leading-none font-semibold">
+                                        Horaires de travail
+                                    </div>
+                                    <div data-slot="card-description" class="text-muted-foreground text-sm">
+                                        Vue d’ensemble des horaires
+                                    </div>
                                 </div>
-                                <div data-slot="card-description" class="text-muted-foreground text-sm">
-                                    Vue d’ensemble des horaires   
-
-
-
-
-                                    
-                                </div>
-                            </div>
-                            <div class="relative w-64">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2 top-2.5 h-4 w-4 text-muted-foreground">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.3-4.3"></path>
-                                </svg>
-                                <input data-slot="input" id="searchAttendance" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-8" placeholder="Rechercher..." >
                             </div>
                         </div>
-                    </div>
-                    <div data-slot="card-content" class="px-6">
-                        <div data-slot="table-container" class="relative w-full overflow-x-auto">
-                            <table data-slot="table" class="w-full caption-bottom text-sm" id="attendanceTable">
-                                <thead data-slot="table-header" class="[&amp;_tr]:border-b">
-                                    <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Employé
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Date
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Arrivée
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Départ
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Statut
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody data-slot="table-body" class="[&amp;_tr:last-child]:border-0">
-                                    {% for attendance in attendances%}
+                        <div data-slot="card-content" class="px-6">
+                            <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                                <table data-slot="table" class="w-full caption-bottom text-sm" id="shiftTable">
+                                    <thead data-slot="table-header" class="[&amp;_tr]:border-b">
                                         <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-medium">
-                                                {{attendance.username}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.date}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.clock_in}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.clock_out}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {% if attendance.status == "Présent" %}
-                                                    <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&amp;]:hover:bg-accent [a&amp;]:hover:text-accent-foreground bg-green-100 text-green-800 border-green-200">Présent</span>
-                                                {% elif attendance.status == "En retard" %}
-                                                    <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden border-transparent bg-destructive text-white [a&amp;]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60">En retard</span>
-                                                {% endif %}
-                                            </td>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                #
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                Arrivée
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                Départ
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4">Aucun historique trouvé.</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody data-slot="table-body" class="[&amp;_tr:last-child]:border-0">
+                                        {% for shift in shifts%}
+                                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-medium">
+                                                    {{shift.number}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                    {{shift.start_time}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                    {{shift.end_time}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
+                                                    <div class="flex justify-end gap-1">
+                                                    <button data-id="{{shift.id}}" data-slot="button" class="change-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen h-4 w-4">
+                                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button data-id="{{shift.id}}" data-slot="button" class="delete-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 h-4 w-4">
+                                                        <path d="M3 6h18"></path>
+                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                        <line x1="10" x2="10" y1="11" y2="17"></line>
+                                                        <line x1="14" x2="14" y1="11" y2="17"></line>
+                                                        </svg>
+                                                    </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">Aucun horaire trouvé.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm md:col-span-2">
-                    <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex flex-col gap-2">
-                                <div data-slot="card-title" class="leading-none font-semibold">
-                                    Historique des présences
+                <div class="flex flex-col gap-6 md:col-span-2">
+                    <div class="flex justify-end gap-1">
+                        <button id="scan-button" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4">
+                                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                            </svg>Scannez la carte
+                        </button>
+                        <button id="add-dayoff" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2 h-4 w-4">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                            </svg>Nouvel Repos
+                        </button>
+                    </div>
+                    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                        <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex flex-col gap-2">
+                                    <div data-slot="card-title" class="leading-none font-semibold">
+                                        Jours de repos
+                                    </div>
+                                    <div data-slot="card-description" class="text-muted-foreground text-sm">
+                                        Vue d'ensemble des repos de l'équipe 
+                                    </div>
                                 </div>
-                                <div data-slot="card-description" class="text-muted-foreground text-sm">
-                                    Vue d'ensemble de l'équipe
+                                <div class="relative w-64">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2 top-2.5 h-4 w-4 text-muted-foreground">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.3-4.3"></path>
+                                    </svg>
+                                    <input data-slot="input" id="searchDayoff" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-8" placeholder="Rechercher..." >
                                 </div>
-                            </div>
-                            <div class="relative w-64">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2 top-2.5 h-4 w-4 text-muted-foreground">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.3-4.3"></path>
-                                </svg>
-                                <input data-slot="input" id="searchAttendance" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-8" placeholder="Rechercher..." >
                             </div>
                         </div>
-                    </div>
-                    <div data-slot="card-content" class="px-6">
-                        <div data-slot="table-container" class="relative w-full overflow-x-auto">
-                            <table data-slot="table" class="w-full caption-bottom text-sm" id="attendanceTable">
-                                <thead data-slot="table-header" class="[&amp;_tr]:border-b">
-                                    <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Employé
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Date
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Arrivée
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Départ
-                                        </th>
-                                        <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                            Statut
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody data-slot="table-body" class="[&amp;_tr:last-child]:border-0">
-                                    {% for attendance in attendances%}
+                        <div data-slot="card-content" class="px-6">
+                            <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                                <table data-slot="table" class="w-full caption-bottom text-sm" id="dayoffTable">
+                                    <thead data-slot="table-header" class="[&amp;_tr]:border-b">
                                         <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-medium">
-                                                {{attendance.username}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.date}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.clock_in}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {{attendance.clock_out}}
-                                            </td>
-                                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
-                                                {% if attendance.status == "Présent" %}
-                                                    <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&amp;]:hover:bg-accent [a&amp;]:hover:text-accent-foreground bg-green-100 text-green-800 border-green-200">Présent</span>
-                                                {% elif attendance.status == "En retard" %}
-                                                    <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden border-transparent bg-destructive text-white [a&amp;]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60">En retard</span>
-                                                {% endif %}
-                                            </td>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                ID
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                Nom complet
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                Repos
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                Horaires
+                                            </th>
+                                            <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4">Aucun historique trouvé.</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody data-slot="table-body" class="[&amp;_tr:last-child]:border-0">
+                                        {% for dayoff in dayoffs%}
+                                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-medium">
+                                                    {{dayoff.username}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                    {{dayoff.name}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                    {{dayoff.day}}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">
+                                                    {% for shift in dayoff.shifts%}
+                                                        {{shift.items}}
+                                                    {% endfor %}
+                                                </td>
+                                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
+                                                    <div class="flex justify-end gap-1">
+                                                    <button data-id="{{dayoff.id}}" data-slot="button" class="change-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen h-4 w-4">
+                                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button data-id="{{dayoff.id}}" data-slot="button" class="delete-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 h-4 w-4">
+                                                        <path d="M3 6h18"></path>
+                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                        <line x1="10" x2="10" y1="11" y2="17"></line>
+                                                        <line x1="14" x2="14" y1="11" y2="17"></line>
+                                                        </svg>
+                                                    </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">Aucun repos trouvé.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

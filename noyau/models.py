@@ -79,9 +79,13 @@ class Shift(models.Model):
 class DayOff(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.SET_NULL, null=True, blank=True)
     day = models.CharField(max_length=10)
-
+    
 class Penalty(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField()
     reason = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+class EmployerShift(models.Model):
+    employer = models.ForeignKey(Employer, on_delete=models.SET_NULL, null=True, blank=True)
+    shift = models.ForeignKey(Shift, on_delete=models.SET_NULL, null=True, blank=True)

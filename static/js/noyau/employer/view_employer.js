@@ -55,12 +55,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
       <div
         role="dialog"
-        id="addModal"
         aria-describedby="radix-_r_c_"
         aria-labelledby="radix-_r_b_"
         data-state="open"
         data-slot="dialog-content"
-        class="addModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+        class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
         tabindex="-1"
         style="pointer-events: auto"
         >
@@ -233,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     `;
 
-        const modal = document.getElementById('addModal');
         const closeModal = document.getElementById('closeModal');
         const form = document.getElementById('addForm');
         const permission = document.getElementById('permission-employer');
@@ -477,12 +475,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
             <div
                 role="dialog"
-                id="changeModal"
                 aria-describedby="radix-_r_c_"
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="changeModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -625,7 +622,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </button>
                 </div>
             `;
-        const modal = document.getElementById('changeModal');
         const closeModal = document.getElementById('closeModal');
         const form = document.getElementById('changeForm');
         const permission = document.getElementById('permission-employer');

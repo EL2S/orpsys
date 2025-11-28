@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="requestModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -384,19 +384,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="hidden" name="production_id" value="${productionId}">
                     <div class="p-4 bg-muted rounded-lg text-center flex flex-row justify-center items-center gap-4">
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Prévu</p>
+                            <p class="text-sm text-muted-foreground">Prévu</p>
                             <p class="text-2xl font-bold">${ production.planned_quantity }</p>
                         </div>
 
                         <!-- Stock Vendu -->
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Vendu</p>
+                            <p class="text-sm text-muted-foreground">Vendu</p>
                             <p class="text-2xl font-bold">${ production.sold_quantity }</p>
                         </div>
 
                         <!-- Stock Restant -->
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Restant</p>
+                            <p class="text-sm text-muted-foreground">Restant</p>
                             <p class="text-2xl font-bold">${ production.remaining_quantity }</p>
                         </div>
                     </div>
@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="requestModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -539,19 +539,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="hidden" name="production_id" value="${productionId}">
                     <div class="p-4 bg-muted rounded-lg text-center flex flex-row justify-center items-center gap-4">
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Prévu</p>
+                            <p class="text-sm text-muted-foreground">Prévu</p>
                             <p class="text-2xl font-bold">${ production.planned_quantity }</p>
                         </div>
 
                         <!-- Stock Vendu -->
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Vendu</p>
+                            <p class="text-sm text-muted-foreground">Vendu</p>
                             <p class="text-2xl font-bold">${ production.sold_quantity }</p>
                         </div>
 
                         <!-- Stock Restant -->
                         <div class="p-4 bg-muted rounded-lg text-center">
-                            <p class="text-sm text-muted-foreground">Stock Restant</p>
+                            <p class="text-sm text-muted-foreground">Restant</p>
                             <p class="text-2xl font-bold">${ production.remaining_quantity }</p>
                         </div>
                     </div>

@@ -31,6 +31,10 @@ urlpatterns = [
     path("pos/transaction/add/", views.add_transaction, name='add_transaction'),
     path("pos/ticket/print/", views.print_ticket, name='print_ticket'),
     path("attendance/", views.view_attendance, name='view_attendance'),
+    path("attendance/shift/<int:shift_id>/delete/", views.delete_shift, name='delete_shift'),
+    path("attendance/shift/<int:shift_id>/get/", views.get_shift, name='get_shift'),
+    path("attendance/dayoff/<int:dayoff_id>/delete/", views.delete_dayoff, name='delete_dayoff'),
+    path("attendance/dayoff/<int:dayoff_id>/get/", views.get_dayoff, name='get_dayoff'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

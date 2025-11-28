@@ -10091,3 +10091,220 @@
 .product-img input[type="file"] {
     display: none;           /* cache l’input file */
 }
+
+.form-extra {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 20px;
+    width: 100%;
+}
+
+.available,
+.chosen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 200px;   
+    flex: 1;             
+}
+
+#password-section{
+    cursor: pointer;
+}
+
+.liste-extra {
+    flex: 1;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.liste-extra select {
+    border: none;
+    height: 100%;
+    min-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+    margin: 0;
+    background: transparent;
+    font-family: "Inter", sans-serif;
+    outline: none;
+}
+
+/* Scrollbar personnalisée */
+.liste-extra select::-webkit-scrollbar {
+    width: 8px;
+}
+
+.liste-extra select::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.liste-extra select::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #22638c 0%, #1a4d6d 100%);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.liste-extra select::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #1a4d6d 0%, #22638c 100%);
+}
+
+/* Options */
+.liste-extra select option {
+    color: #334155;
+    font-size: 13px;
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 4px;
+}
+
+
+.liste-extra select option:hover {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: #22638c;
+    color: #22638c;
+    transform: translateX(4px);
+}
+
+.liste-extra select option:checked {
+    background: linear-gradient(135deg, #22638c 0%, #1a4d6d 100%);
+    color: white;
+    border-color: #22638c;
+    font-weight: 500;
+}
+
+.chosen .liste-extra select option:checked {
+    background: linear-gradient(135deg, #ff9d00 0%, #ff8800 100%);
+    border-color: #ff9d00;
+}
+
+/* Badge de comptage */
+.count-badge {
+    margin-top: 16px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    border-radius: 8px;
+    text-align: center;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: #22638c;
+    font-weight: 500;
+    border: 1px solid rgba(34, 99, 140, 0.2);
+}
+
+.count-badge span {
+    font-weight: 700;
+    font-size: 16px;
+    color: #22638c;
+}
+
+.chosen-badge {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    color: #ff9d00;
+    border-color: rgba(255, 157, 0, 0.3);
+}
+
+.chosen-badge span {
+    color: #ff9d00;
+}
+
+/* Contrôles de flèches */
+.arrow-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0;
+}
+
+.icon-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #22638c 0%, #1a4d6d 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(34, 99, 140, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-btn::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.icon-btn:hover::before {
+    width: 100px;
+    height: 100px;
+}
+
+.icon-btn svg {
+    color: white;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.icon-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(34, 99, 140, 0.4);
+}
+
+.icon-btn:hover svg {
+    transform: translateX(2px);
+}
+
+.icon-btn.move-left:hover svg {
+    transform: translateX(-2px);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+.disabled {
+    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.disabled:hover {
+    transform: none;
+}
+
+.modal-custom{
+    width: 550px;
+    max-width: 90%;
+}
