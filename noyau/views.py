@@ -78,14 +78,8 @@ def user_login(request):
                 permissions = Permission.objects.filter(
                     id__in=user_permission_ids, codename__startswith="view"
                 )
-                group_permissions = Permission.objects.filter(
-                    group__user=user, codename__startswith="view"
-                ).distinct()
                 if permissions.exists():
                     perm = random.choice(permissions)
-                    return redirect(perm.codename)
-                elif group_permissions.exists():
-                    perm = random.choice(group_permissions)
                     return redirect(perm.codename)
                 else:
                     context["error_message"] = "Aucune permission de vue trouvée."
