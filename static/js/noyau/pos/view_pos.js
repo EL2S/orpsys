@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loyaltiesData = JSON.parse(loyalties_json.value || "[]");
     }
     scanInput.focus();
-
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
     // --- SCANNER UNE CARTE DE FIDÉLITÉ ---
     scanInput.addEventListener('change', function () {
         const cartValue = this.value.trim();
@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     function processPayment(total, cartItems, loyaltyCard) {
         modalContainer.innerHTML = `
-            <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class="addModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto">
+            <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto">
                 <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 id="settlement" data-slot="dialog-title" class="text-lg leading-none font-semibold">Règlement</h2>
                 </div>
@@ -395,9 +395,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function newTransaction(confirmBtn,total, cartItems, loyaltyCard){
         const tab = confirmBtn.dataset.tab;
         let newBalance = 0;
-        if(tab === 'cash') {
-            newBalance = parseInt(loyaltyCard.solde);
-        } else if(tab === 'card') {
+        if(tab === 'card') {
             newBalance = parseInt(loyaltyCard.solde) - parseInt(total);
         }
         finalizeTransaction(total, cartItems, loyaltyCard, newBalance);
@@ -414,7 +412,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fetch(`/pos/transaction/add/`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken.value},
             body: JSON.stringify(payload)
         })
         .then(res => res.json())
@@ -427,7 +425,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 const response = await fetch(`/pos/ticket/print/`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken.value},
                     body: JSON.stringify(payload)
                 });
 
@@ -541,21 +539,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
         }
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
     }
 
 });

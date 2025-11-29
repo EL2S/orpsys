@@ -1,165 +1,87 @@
-<div role="dialog" id="radix-_r_f_" aria-describedby="radix-_r_h_" aria-labelledby="radix-_r_g_" data-state="open" data-slot="dialog-content" class="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-md" tabindex="-1" style="pointer-events: auto"
->
-  <div
-    data-slot="dialog-header"
-    class="flex flex-col gap-2 text-center sm:text-left"
-  >
-    <h2
-      id="radix-_r_g_"
-      data-slot="dialog-title"
-      class="text-lg leading-none font-semibold"
-    >
-      Règlement
-    </h2>
-  </div>
-  <div class="grid gap-6 py-4">
-    <div class="text-center">
-      <p class="text-sm text-muted-foreground">Montant total</p>
-      <p class="text-4xl font-bold text-primary">350 FCFA</p>
-    </div>
-    <div
-      dir="ltr"
-      data-orientation="horizontal"
-      data-slot="tabs"
-      class="flex flex-col gap-2 w-full"
-    >
-      <div
-        role="tablist"
-        aria-orientation="horizontal"
-        data-slot="tabs-list"
-        class="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid w-full grid-cols-2"
-        tabindex="0"
-        data-orientation="horizontal"
-        style="outline: none"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected="true"
-          aria-controls="radix-_r_i_-content-cash"
-          data-state="active"
-          id="radix-_r_i_-trigger-cash"
-          data-slot="tabs-trigger"
-          class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4"
-          tabindex="0"
-          data-orientation="horizontal"
-          data-radix-collection-item=""
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="lucide lucide-banknote mr-2 h-4 w-4"
-          >
-            <rect width="20" height="12" x="2" y="6" rx="2"></rect>
-            <circle cx="12" cy="12" r="2"></circle>
-            <path d="M6 12h.01M18 12h.01"></path></svg
-          >Espèces</button
-        ><button
-          type="button"
-          role="tab"
-          aria-selected="false"
-          aria-controls="radix-_r_i_-content-card"
-          data-state="inactive"
-          id="radix-_r_i_-trigger-card"
-          data-slot="tabs-trigger"
-          class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4"
-          tabindex="-1"
-          data-orientation="horizontal"
-          data-radix-collection-item=""
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="lucide lucide-credit-card mr-2 h-4 w-4"
-          >
-            <rect width="20" height="14" x="2" y="5" rx="2"></rect>
-            <line x1="2" x2="22" y1="10" y2="10"></line></svg
-          >Carte Fidélité
-        </button>
-      </div>
-      <div
-        data-state="active"
-        data-orientation="horizontal"
-        role="tabpanel"
-        aria-labelledby="radix-_r_i_-trigger-cash"
-        id="radix-_r_i_-content-cash"
-        tabindex="0"
-        data-slot="tabs-content"
-        class="flex-1 outline-none space-y-4 mt-4"
-        style="animation-duration: 0s"
-      >
-        <div class="space-y-2">
-          <label
-            data-slot="label"
-            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
-            >Montant reçu</label
-          ><input
-            data-slot="input"
-            class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-lg"
-            placeholder="0"
-            type="number"
-            value=""
-          />
-        </div>
-      </div>
-      <div
-        data-state="inactive"
-        data-orientation="horizontal"
-        role="tabpanel"
-        aria-labelledby="radix-_r_i_-trigger-card"
-        hidden=""
-        id="radix-_r_i_-content-card"
-        tabindex="0"
-        data-slot="tabs-content"
-        class="flex-1 outline-none mt-4"
-      ></div>
-    </div>
-  </div>
-  <div
-    data-slot="dialog-footer"
-    class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"
-  >
-    <button
-      data-slot="button"
-      class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full"
-      disabled=""
-    >
-      Valider le paiement
-    </button>
-  </div>
-  <button
-    type="button"
-    data-slot="dialog-close"
-    class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="lucide lucide-x"
-    >
-      <path d="M18 6 6 18"></path>
-      <path d="m6 6 12 12"></path></svg
-    ><span class="sr-only">Close</span>
-  </button>
-</div>
+<div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto" >
+                <div data-slot="dialog-header" class="modal-custom flex flex-col gap-2 text-center sm:text-left">
+                    <h2 data-slot="dialog-title" class="text-lg leading-none font-semibold" >
+                        Information du horaire de travail et du jour de repos
+                    </h2>
+                </div>
+                <form class="grid gap-4 py-4" id="addDayoffForm" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken.value}">
+                    <input type="hidden" name="type" value="add-dayoff">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label
+                            data-slot="label"
+                            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                            for="employer_id"
+                            >Employé </label
+                            ><select
+                            id="employer_id"
+                            name="employer_id"
+                            class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                                ${optionsHTML}
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                            data-slot="label"
+                            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                            for="day"
+                            >Jours de repos </label
+                            ><select
+                            id="day"
+                            name="day"
+                            class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                            <option value="Lundi">Lundi</option>
+                            <option value="Mardi">Mardi</option>
+                            <option value="Mércredit">Mércredit</option>
+                            <option value="Jeudi">Jeudi</option>
+                            <option value="Vendredi">Vendredi</option>
+                            <option value="Samedi">Samedi</option>
+                            <option value="Dimanche">Dimanche</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div class="form-extra">
+                            <div class="available">
+                                <div class="leading-none font-semibold">Horaires disponibles</div>
+                                <div class="liste-extra">
+                                    <select multiple name="aut_ch" id="aut_ch">
+                                        ${shiftsHTML}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="arrow-controls">
+                                <div class="icon-btn" id="move_right">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right fs-5">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg> 
+                                </div>
+                                <div class="icon-btn" id="move_left">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left text-body fs-5">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg> 
+                                </div>
+                            </div>
+                            <div class="chosen">
+                                <div class="leading-none font-semibold">Horaires choisies</div>
+                                <div class="liste-extra">
+                                    <select multiple name="aut_rem" id="aut_rem">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-slot="dialog-footer" class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end" >
+                        <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit">
+                            Enregistrer
+                        </button>
+                    </div>
+                </form>
+                <button type="button" data-slot="dialog-close" id="closeModal" class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" >
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path></svg
+                    ><span class="sr-only">Close</span>
+                </button>
+            </div>

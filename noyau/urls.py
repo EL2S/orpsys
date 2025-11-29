@@ -35,6 +35,7 @@ urlpatterns = [
     path("attendance/shift/<int:shift_id>/get/", views.get_shift, name='get_shift'),
     path("attendance/dayoff/<int:dayoff_id>/delete/", views.delete_dayoff, name='delete_dayoff'),
     path("attendance/dayoff/<int:dayoff_id>/get/", views.get_dayoff, name='get_dayoff'),
+    path("salarie/", views.view_salarie, name='view_salarie'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

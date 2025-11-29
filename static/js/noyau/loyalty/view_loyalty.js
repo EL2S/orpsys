@@ -125,12 +125,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modalContainer.innerHTML = `
             <div
                 role="dialog"
-                id="deleteModal"
                 aria-describedby="radix-_r_c_"
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="addModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -139,7 +138,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -202,12 +200,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modalContainer.innerHTML = `
             <div
                 role="dialog"
-                id="changeModal"
                 aria-describedby="radix-_r_c_"
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -216,7 +213,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -330,12 +326,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modalContainer.innerHTML = `
             <div
                 role="dialog"
-                id="balanceModal"
                 aria-describedby="radix-_r_c_"
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -344,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -450,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -459,7 +453,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -564,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -573,7 +566,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -731,4 +723,68 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return cookieValue;
     }
+
+    let allRows = Array.from(document.querySelectorAll("#loyaltyTable tbody tr"));
+    let rows = allRows.filter(row => !row.textContent.includes("Aucun carte trouvé."));
+
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    const paginationInfo = document.querySelector("#pagination .text-muted-foreground");
+    const pageNumberLabel = document.querySelector("#pagination .page-number");
+    const prevBtn = document.querySelector('#pagination button:first-child');
+    const nextBtn = document.querySelector('#pagination button:last-child');
+
+    function renderTable() {
+        const totalRows = rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        // Masquer toutes les lignes
+        allRows.forEach(row => row.style.display = "none");
+
+        // Si 0 résultat
+        if (totalRows === 0) {
+            // afficher la ligne "Aucun carte trouvé."
+            const noDataRow = allRows.find(row => row.textContent.includes("Aucun carte trouvé."));
+            if (noDataRow) noDataRow.style.display = "";
+
+            // Textes pagination
+            paginationInfo.textContent = "Affichage de 0 à 0 sur 0 résultats";
+            pageNumberLabel.textContent = "Page 1 sur 1";
+
+            // Désactiver les boutons
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+
+            return; // arrêter ici
+        }
+
+        // Sinon, pagination normale
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = Math.min(start + rowsPerPage, totalRows);
+
+        for (let i = start; i < end; i++) {
+            rows[i].style.display = "";
+        }
+
+        // MAJ textes
+        paginationInfo.textContent = `Affichage de ${start + 1} à ${end} sur ${totalRows} résultats`;
+        pageNumberLabel.textContent = `Page ${currentPage} sur ${totalPages}`;
+
+        // Buttons
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+    }
+
+    prevBtn.addEventListener("click", () => {
+        currentPage--;
+        renderTable();
+    });
+
+    nextBtn.addEventListener("click", () => {
+        currentPage++;
+        renderTable();
+    });
+
+    renderTable();
 });

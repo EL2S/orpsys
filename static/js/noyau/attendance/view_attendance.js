@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -175,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -184,7 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     class="flex flex-col gap-2 text-center sm:text-left"
                 >
                     <h2
-                    id="radix-_r_b_"
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
@@ -342,10 +340,25 @@ document.addEventListener('DOMContentLoaded', function () {
             <option value="${item.id}" title="De ${item.start_time} à ${item.end_time}">De ${item.start_time} à ${item.end_time}</option>
         `).join('');
         modalContainer.innerHTML = `
-            <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto" >
-                <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
-                    <h2 id="radix-_r_b_" data-slot="dialog-title" class="text-lg leading-none font-semibold" >
-                        Information du horaire de travail et du jour de repos
+            <div
+                role="dialog"
+                aria-describedby="radix-_r_c_"
+                aria-labelledby="radix-_r_b_"
+                data-state="open"
+                data-slot="dialog-content"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                tabindex="-1"
+                style="pointer-events: auto"
+                >
+                <div
+                    data-slot="dialog-header"
+                    class="flex flex-col gap-2 text-center sm:text-left"
+                >
+                    <h2
+                    data-slot="dialog-title"
+                    class="text-lg leading-none font-semibold"
+                    >
+                    Information du horaires de travail
                     </h2>
                 </div>
                 <form class="grid gap-4 py-4" id="addDayoffForm" method="POST" enctype="multipart/form-data">
@@ -416,14 +429,37 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
                     </div>
-                    <div data-slot="dialog-footer" class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end" >
-                        <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit">
-                            Enregistrer
-                        </button>
+                    <div
+                    data-slot="dialog-footer"
+                    class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"
+                    >
+                    <button
+                        data-slot="button"
+                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3"
+                        type="submit"
+                    >
+                        Enregistrer
+                    </button>
                     </div>
                 </form>
-                <button type="button" data-slot="dialog-close" id="closeModal" class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" >
+                <button
+                    type="button"
+                    data-slot="dialog-close"
+                    id="closeModal"
+                    class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4"
+                >
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-x"
+                    >
                     <path d="M18 6 6 18"></path>
                     <path d="m6 6 12 12"></path></svg
                     ><span class="sr-only">Close</span>
@@ -572,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="addModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -650,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
         modalContainer.innerHTML = `
             <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto" >
-                <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
+                <div data-slot="dialog-header" class="modal-custom flex flex-col gap-2 text-center sm:text-left">
                     <h2 id="radix-_r_b_" data-slot="dialog-title" class="text-lg leading-none font-semibold" >
                         Information du horaire de travail et du jour de repos
                     </h2>
@@ -859,10 +895,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function addShift() {
         modalContainer.innerHTML = `
-            <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto" >
-                <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
-                    <h2 id="radix-_r_b_" data-slot="dialog-title" class="text-lg leading-none font-semibold" >
-                        Information du horaires de travail
+            <div
+                role="dialog"
+                aria-describedby="radix-_r_c_"
+                aria-labelledby="radix-_r_b_"
+                data-state="open"
+                data-slot="dialog-content"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                tabindex="-1"
+                style="pointer-events: auto"
+                >
+                <div
+                    data-slot="dialog-header"
+                    class="flex flex-col gap-2 text-center sm:text-left"
+                >
+                    <h2
+                    data-slot="dialog-title"
+                    class="text-lg leading-none font-semibold"
+                    >
+                    Information du horaires de travail
                     </h2>
                 </div>
                 <form class="grid gap-4 py-4" id="addShiftForm" method="POST" enctype="multipart/form-data">
@@ -901,15 +952,39 @@ document.addEventListener('DOMContentLoaded', function () {
                             
                             />
                         </div>
+                        
                     </div>
-                    <div data-slot="dialog-footer" class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end" >
-                        <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit">
-                            Enregistrer
-                        </button>
+                    <div
+                    data-slot="dialog-footer"
+                    class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"
+                    >
+                    <button
+                        data-slot="button"
+                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3"
+                        type="submit"
+                    >
+                        Enregistrer
+                    </button>
                     </div>
                 </form>
-                <button type="button" data-slot="dialog-close" id="closeModal" class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" >
+                <button
+                    type="button"
+                    data-slot="dialog-close"
+                    id="closeModal"
+                    class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4"
+                >
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-x"
+                    >
                     <path d="M18 6 6 18"></path>
                     <path d="m6 6 12 12"></path></svg
                     ><span class="sr-only">Close</span>
@@ -956,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 aria-labelledby="radix-_r_b_"
                 data-state="open"
                 data-slot="dialog-content"
-                class="addModal bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
+                class="modal-custom bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]"
                 tabindex="-1"
                 style="pointer-events: auto"
                 >
@@ -1025,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function changeShift(shift, shiftId) {
         modalContainer.innerHTML = `
             <div role="dialog" aria-describedby="radix-_r_c_" aria-labelledby="radix-_r_b_" data-state="open" data-slot="dialog-content" class=" bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[425px]" tabindex="-1" style="pointer-events: auto" >
-                <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
+                <div data-slot="dialog-header" class="modal-custom flex flex-col gap-2 text-center sm:text-left">
                     <h2 id="radix-_r_b_" data-slot="dialog-title" class="text-lg leading-none font-semibold" >
                         Information du horaires de travail
                     </h2>

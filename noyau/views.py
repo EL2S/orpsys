@@ -17,13 +17,14 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 import locale
 from django.contrib.auth.models import User, Group, Permission
-from noyau.models import Attendance, DayOff, Employer, EmployerShift, Leave, Loyalty, Production, RawMaterial, SaleProduct, SaleTransaction, SaleTransactionItem, Shift
+from noyau.models import Attendance, DayOff, Employer, EmployerShift, Leave, Loyalty, Penalty, Production, RawMaterial, SaleProduct, SaleTransaction, SaleTransactionItem, Shift
 from django.core.files.storage import default_storage
 # Définit la locale française
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 from django.views.decorators.csrf import csrf_exempt
 import uuid
 import shutil
+from django.db.models import Sum
 
 def update_stock(request):
     day = date.today()
@@ -1020,7 +1021,7 @@ def add_transaction(request):
         new_balance = data.get("new_balance")
 
         # Employee associé à la transaction
-        employee = Employer.objects.filter(user=request.user).first()
+        employer = Employer.objects.filter(user=request.user).first()
 
         # -------------------------------------
         # 🔥 Gestion de la carte selon le method
@@ -1034,7 +1035,7 @@ def add_transaction(request):
         # 🔥 Création de la transaction
         # -------------------------------------
         transaction = SaleTransaction.objects.create(
-            employee = employee,
+            employer = employer,
             loyalty = loyalty,        # None si cash, objet Loyalty si card
             total_amount = clean_decimal(total),
             date = timezone.now(),
@@ -1094,61 +1095,86 @@ def decrease_production_stock(product, quantity_sold):
         production.remaining_quantity = 0  # pas de stock négatif
 
     production.save()
-
 def remove_accents(text):
-    return ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 @csrf_exempt
 def print_ticket(request):
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée."}, status=405)
-    
-    last_transaction = SaleTransaction.objects.order_by("-id").first()
 
     try:
+        last_transaction = SaleTransaction.objects.order_by("-id").first()
+        if not last_transaction:
+            return JsonResponse({"error": "Aucune transaction trouvée."}, status=400)
+
         data = json.loads(request.body)
         items = data.get("items", [])
-        total = data.get("total")
-        TICKET_WIDTH = 45
+        total = data.get("total", 0)
+        TICKET_WIDTH = 48
 
-        ticket_text = "SALIMAMOUD".center(TICKET_WIDTH) + "\n"
+        # ---------------------------
+        # RÉGLAGES D'IMPRESSION THERMIQUE
+        # ---------------------------
+        ticket_text  = chr(27) + chr(64)      
+
+        # ---------------------------
+        # EN-TÊTE
+        # ---------------------------
+        ticket_text += "SALIMAMOUD".center(TICKET_WIDTH) + "\n"
         ticket_text += "Salon de the".center(TICKET_WIDTH) + "\n"
         ticket_text += "Comores, Moroni".center(TICKET_WIDTH) + "\n"
-
         ticket_text += "-" * TICKET_WIDTH + "\n"
-        ticket_text += "Tel : +269 3354113\n"
         ticket_text += f"DATE    : {timezone.localdate().strftime('%d/%m/%Y')}\n"
         ticket_text += f"TICKET  : {last_transaction.id}\n"
         ticket_text += "-" * TICKET_WIDTH + "\n"
-        
-        # --- AFFICHAGE DES ARTICLES AVEC QUANTITÉ ---
+
+        # ---------------------------
+        # ARTICLES
+        # ---------------------------
         for item in items:
             product_id = item.get("id")
-            quantity = item.get("quantity")
-            subtotal = item.get("subtotal")
+            quantity = item.get("quantity", 1)
+            subtotal = item.get("subtotal", 0)
 
-            product = SaleProduct.objects.get(id=product_id)
-            article = product.name.capitalize()
+            try:
+                product = SaleProduct.objects.get(id=product_id)
+                article = product.name.capitalize()
+            except SaleProduct.DoesNotExist:
+                article = "Produit inconnu"
 
-            # Exemple affichage : "Café x2"
             article_text = f"{article} x{quantity}"
-
             prix = f"{subtotal} KMF"
-
             espaces = TICKET_WIDTH - len(article_text) - len(prix)
-            ticket_text += article_text + " " * max(espaces, 1) + prix + "\n"
-        
-        # ---------------------------------------------------
+            ticket_text += article_text + " " * max(1, espaces) + prix + "\n"
 
+        # ---------------------------
+        # TOTAL
+        # ---------------------------
         ticket_text += "-" * TICKET_WIDTH + "\n"
-        ticket_text += f"TOTAL{' ' * (TICKET_WIDTH - len('TOTAL') - len(str(total)) - 4)}{total} KMF\n"
-        ticket_text += "-" * TICKET_WIDTH + "\n"
-        ticket_text += "PAYE EN ESPECES".center(TICKET_WIDTH) + "\n\n"
+        total_line = f"TOTAL"
+        espaces_total = TICKET_WIDTH - len(total_line) - len(f"{total} KMF")
+        ticket_text += total_line + " " * max(1, espaces_total) + f"{total} KMF\n"
+        ticket_text += "-" * TICKET_WIDTH + "\n\n"
+
+        # ---------------------------
+        # MESSAGE DE FIN
+        # ---------------------------
         ticket_text += "MERCI".center(TICKET_WIDTH) + "\n"
         ticket_text += "BONNE JOURNEE".center(TICKET_WIDTH) + "\n"
-        ticket_text += "\n" * 5
-        ticket_text += chr(27) + chr(105)
 
+        # ---------------------------
+        # FEED + CUT
+        # ---------------------------
+        ticket_text += "\n" * 6
+        ticket_text += chr(27) + chr(105)  # ESC i = couper le papier
+
+        # ---------------------------
+        # SUPPRESSION DES ACCENTS POUR ESC/POS
+        # ---------------------------
         ticket_text = remove_accents(ticket_text)
 
         return JsonResponse({'success': True, 'text': ticket_text})
@@ -1365,3 +1391,66 @@ def delete_dayoff(request, dayoff_id):
     dayoff = get_object_or_404(DayOff, id=dayoff_id)
     dayoff.delete()
     return redirect("view_attendance")
+
+
+@permission_required("noyau.view_salarie", raise_exception=True)
+def view_salarie(request):
+    update_stock(request)
+    current_user = request.user
+    first_name = current_user.first_name.capitalize()
+    last_name = current_user.last_name.capitalize()
+    first_letter = first_name[0].upper() if first_name else ""
+    penalties = Penalty.objects.order_by('-date').all()
+    data = []
+    for penalty in penalties:
+        employer = Employer.objects.get(id=penalty.employer.id)
+        user = User.objects.get(id=employer.user.id)
+        data.append({
+            'id': penalty.id,
+            'reason': penalty.reason,
+            'date': penalty.date.strftime('%d/%m/%Y'),
+            'username': user.username,
+            'amount': float(penalty.amount),
+        })
+    
+    employees = Employer.objects.select_related("user").filter(
+        Q(user__username__regex=r"^CAS\d+$") |  
+        Q(user__username__regex=r"^EMP\d+$") |  
+        Q(user__username__regex=r"^MAN\d+$")
+    ).order_by("user__first_name","user__last_name")
+    salarieData = []
+    employeeData = []
+    pointage = 0
+    salary = 0
+    for employee in employees:
+        base = employee.salary
+        penalty = Penalty.objects.filter(employer=employee).aggregate(total=Sum("amount"))["total"] or 0
+        salarieData.append({
+            'name': f"{employee.user.first_name} {employee.user.last_name}",
+            'penalty': float(penalty),
+            'pointage': float(pointage),
+            'base': float(base),
+            'salary': float(salary),
+            "month":"",
+            "year":"",
+        })
+        
+        employeeData.append({
+            'id': employee.id,
+            "username":employee.user.username,
+        })
+        
+    context = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "first_letter": first_letter,
+        "role": getattr(getattr(current_user, "employer", None), "role", None),
+        "penalties": data,
+        "salaries": json.dumps(salarieData),
+        "employees": json.dumps(employeeData),
+    }
+    if request.method == "POST":
+        type = request.POST.get("type", "").strip()
+            
+        return redirect("view_salarie")
+    return render(request, "salarie/view_salarie.html", context)

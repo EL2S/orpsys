@@ -13,11 +13,12 @@
   <body>
     <main>
       <div class="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-        <div class="fixed inset-0 bg-black/50 z-20 lg:hidden"></div>
-        <aside class="fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out translate-x-0">
+        <div class="fixed inset-0 bg-black/50 z-20 lg:hidden" id="screen-hidden"></div>
+        <aside id="translate-x-full" class="fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out translate-x-0">
           <div class="h-full flex flex-col">
             <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <h2 class="text-xl font-bold text-amber-600">Salimamoud</h2><button class="lg:hidden">
+              <h2 class="text-xl font-bold text-amber-600">Salimamoud</h2>
+              <button class="lg:hidden" id="close-menu">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x h-5 w-5 text-slate-500">
                   <path d="M18 6 6 18"></path>
                   <path d="m6 6 12 12"></path>
@@ -26,7 +27,7 @@
             </div>
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
               {% if 'noyau.view_dashboard' in user.get_all_permissions %}
-                <a href="{% url 'view_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                <a href="{% url 'view_dashboard' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard h-5 w-5 text-amber-600">
                     <rect width="7" height="9" x="3" y="3" rx="1"></rect>
                     <rect width="7" height="5" x="14" y="3" rx="1"></rect>
@@ -36,7 +37,7 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_pos' in user.get_all_permissions %}
-              <a href="{% url 'view_pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+              <a href="{% url 'view_pos' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
                   <circle cx="8" cy="21" r="1"></circle>
                   <circle cx="19" cy="21" r="1"></circle>
@@ -45,7 +46,7 @@
               </a>
               {% endif %}
               {% if 'noyau.view_leave' in user.get_all_permissions %}
-                <a href="{% url 'view_leave' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_leave' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
                     <path d="M8 2v4"></path>
                     <path d="M16 2v4"></path>
@@ -55,7 +56,7 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_employer' in user.get_all_permissions %}
-                <a href="{% url 'view_employer' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_employer' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-slate-400">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
@@ -65,15 +66,23 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_attendance' in user.get_all_permissions %}
-                <a href="{% url 'view_attendance' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_attendance' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-slate-400">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>Pointage
                 </a>
               {% endif %}
+              {% if 'noyau.view_salarie' in user.get_all_permissions %}
+                <a href="{% url 'view_salarie' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-slate-400">
+                    <line x1="12" x2="12" y1="2" y2="22"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>Salaires
+                </a>
+              {% endif %}
               {% if 'noyau.view_loyalty' in user.get_all_permissions %}
-                <a href="{% url 'view_loyalty' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_loyalty' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-5 w-5 text-slate-400">
                     <rect width="20" height="14" x="2" y="5" rx="2"></rect>
                     <line x1="2" x2="22" y1="10" y2="10"></line>
@@ -81,7 +90,7 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_saleproduct' in user.get_all_permissions %}
-                <a href="{% url 'view_saleproduct' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_saleproduct' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-basket h-5 w-5 text-slate-400">
                     <path d="m15 11-1 9"></path>
                     <path d="m19 11-4-7"></path>
@@ -94,7 +103,7 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_rawmaterial' in user.get_all_permissions %}
-                <a href="{% url 'view_rawmaterial' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_rawmaterial' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-5 w-5 text-slate-400">
                     <path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path>
                     <path d="M12 22V12"></path>
@@ -104,7 +113,7 @@
                 </a>
               {% endif %}
               {% if 'noyau.view_production' in user.get_all_permissions %}
-                <a href="{% url 'view_production' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                <a href="{% url 'view_production' %}" class="custom-items flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chef-hat h-5 w-5 text-slate-400">
                     <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"></path>
                     <path d="M6 17h12"></path>
@@ -132,13 +141,14 @@
         </aside>
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
           <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center px-4 lg:px-8 justify-between lg:justify-end">
-            <button class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-md">
+            <button class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-md" id="open-menu">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu h-6 w-6">
                 <line x1="4" x2="20" y1="12" y2="12"></line>
                 <line x1="4" x2="20" y1="6" y2="6"></line>
                 <line x1="4" x2="20" y1="18" y2="18"></line>
               </svg>
-            </button><div class="flex items-center gap-4">
+            </button>
+            <div class="flex items-center gap-4">
               <span class="text-sm text-slate-500 hidden sm:inline-block">vendredi 21 novembre 2025</span>
             </div>
           </header>

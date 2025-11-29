@@ -11,6 +11,7 @@
   </head>
   <body>
     <input type="hidden" id="loyalties_json" value="{{ loyalties_json }}">
+    {% csrf_token %}
     <div class="h-screen flex flex-col bg-muted/30">
       <header
         class="bg-background border-b p-4 flex items-center justify-between"

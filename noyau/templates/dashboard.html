@@ -137,7 +137,7 @@
         {% endif %}
         {% if 'noyau.view_salarie' in user.get_all_permissions %}
         <!-- Salaires -->
-        <div data-slot="card"
+        <a href="{% url 'view_salarie' %}" data-slot="card"
           class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm 
                  cursor-pointer group hover:shadow-lg transition-all duration-200 border-muted/60 
                  hover:border-primary/20">
@@ -165,7 +165,7 @@
               Accéder au module →
             </div>
           </div>
-        </div>
+        </a>
         {% endif %}
         <!-- Caisse -->
         {% if 'noyau.view_pos' in user.get_all_permissions %}
