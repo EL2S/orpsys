@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+  <link href="{% static 'css/ai_assistant.css' %}" rel="stylesheet" />
+{% endblock %}
+{% block script %}ai_assistant.js{% endblock %}
+{% block content %}
+<div class="ai-assistant">
+  <header class="ai-header">
+    <div>
+      <h1>Salimamoud Intelligence</h1>
+      <p class="ai-subtitle">Assistant administratif nouvelle génération</p>
+    </div>
+  </header>
+
+  <section class="ai-logo-area">
+    <div class="ai-logo-frame">
+      <div class="ai-logo-pulse">
+        <img src="{% static 'img/logo/salimamoud.png' %}" alt="Salimamoud" class="ai-logo" />
+      </div>
+    </div>
+  </section>
+
+  <section class="ai-debrief" id="ai-debrief" aria-live="polite">
+    <div class="ai-debrief-top">
+      <div>
+        <p class="ai-section-label">Débriefing</p>
+        <h2 id="ai-debrief-title">Jour</h2>
+        <p class="ai-debrief-range" id="ai-debrief-range"></p>
+      </div>
+      <div class="ai-stepper" id="ai-stepper"></div>
+    </div>
+
+    <div class="ai-debrief-grid" id="ai-debrief-sections"></div>
+
+    <div class="ai-debrief-actions">
+      <button type="button" id="ai-prev" class="ai-step-btn ai-step-btn--ghost">Précédent</button>
+      <button type="button" id="ai-next" class="ai-step-btn">Suivant</button>
+      <button type="button" id="ai-stop" class="ai-step-btn ai-step-btn--ghost">Arrêter</button>
+    </div>
+  </section>
+
+  <section class="ai-response" id="ai-response" aria-live="polite">
+    <div class="ai-response-top">
+      <div>
+        <p class="ai-section-label">Assistant Salimamoud</p>
+        <h2 id="ai-response-title">Réponse</h2>
+        <p class="ai-debrief-range" id="ai-response-range"></p>
+      </div>
+      <div class="ai-response-controls" id="ai-response-controls"></div>
+    </div>
+    <div class="ai-debrief-grid" id="ai-response-grid"></div>
+  </section>
+
+  <footer class="ai-input-bar">
+    <div class="ai-input-field">
+      <input type="text" placeholder="Écrire un message..." aria-label="Message" />
+      <div class="ai-help" id="ai-help" role="listbox" aria-label="Suggestions"></div>
+    </div>
+    <button type="button" class="ai-mic-btn" aria-label="Parler">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"></path>
+        <path d="M19 11a7 7 0 0 1-14 0"></path>
+        <path d="M12 18v4"></path>
+        <path d="M8 22h8"></path>
+      </svg>
+      <span>Parler</span>
+    </button>
+    <button type="button" class="ai-send-btn">Envoyer</button>
+  </footer>
+</div>
+{{ ai_debrief_data|json_script:"ai-debrief-data" }}
+{% endblock %}

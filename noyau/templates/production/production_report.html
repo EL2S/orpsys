@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block script %}production/report.js{% endblock %}
+{% block content %}
+  <div class="container mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a
+          href="{% url 'view_dashboard' %}"
+          data-slot="button"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground size-9"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4">
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+        </a>
+        <h1 class="text-3xl font-bold">{{ page_title }}</h1>
+      </div>
+      <div class="text-sm text-muted-foreground">Comparaison sorties stock vs production</div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground rounded-xl border shadow-sm">
+      <div data-slot="card-content" class="px-6 py-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div class="text-sm font-semibold">Filtrer la période</div>
+            <div class="text-xs text-muted-foreground">Choisissez une plage puis générez le rapport.</div>
+          </div>
+          <div class="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+            Période : {{ start_date|date:"d/m/Y" }} → {{ end_date|date:"d/m/Y" }}
+          </div>
+        </div>
+
+        <form method="get" class="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
+          <div class="space-y-1">
+            <label data-slot="label" class="flex items-center gap-2 text-xs leading-none font-medium">Début</label>
+            <input
+              data-slot="input"
+              class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none"
+              type="date"
+              name="start"
+              value="{{ start_date|date:'Y-m-d' }}"
+            />
+          </div>
+          <div class="space-y-1">
+            <label data-slot="label" class="flex items-center gap-2 text-xs leading-none font-medium">Fin</label>
+            <input
+              data-slot="input"
+              class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none"
+              type="date"
+              name="end"
+              value="{{ end_date|date:'Y-m-d' }}"
+            />
+          </div>
+          <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-5 py-2" type="submit">
+            Générer
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="px-6">
+        <div class="text-lg font-semibold">Synthèse visuelle</div>
+        <div class="text-sm text-muted-foreground">Comparaison des sorties stock et de la consommation théorique</div>
+      </div>
+      <div data-slot="card-content" class="px-6 space-y-6">
+        <div class="rounded-xl border bg-background p-4">
+          <div class="text-sm font-semibold mb-4">Comptoir (POS)</div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-xl border bg-background p-4">
+              <div class="text-sm font-medium mb-3">Sortie stock vs conso théorique</div>
+              <div class="h-72">
+                <canvas id="chart-comparison-pos"></canvas>
+              </div>
+            </div>
+            <div class="rounded-xl border bg-background p-4">
+              <div class="text-sm font-medium mb-3">Écarts (sortie - théorique)</div>
+              <div class="h-72">
+                <canvas id="chart-delta-pos"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl border bg-background p-4">
+          <div class="text-sm font-semibold mb-4">Mini-Four (Boulangerie)</div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-xl border bg-background p-4">
+              <div class="text-sm font-medium mb-3">Sortie stock vs conso théorique</div>
+              <div class="h-72">
+                <canvas id="chart-comparison-bakery"></canvas>
+              </div>
+            </div>
+            <div class="rounded-xl border bg-background p-4">
+              <div class="text-sm font-medium mb-3">Écarts (sortie - théorique)</div>
+              <div class="h-72">
+                <canvas id="chart-delta-bakery"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="px-6">
+        <div class="text-lg font-semibold">Comptoir (POS)</div>
+      </div>
+      <div data-slot="card-content" class="px-6">
+        <div data-slot="table-container" class="relative w-full overflow-x-auto">
+          <table data-slot="table" class="w-full caption-bottom text-sm">
+            <thead data-slot="table-header" class="[&_tr]:border-b">
+              <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Ingrédient</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Sortie stock</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Conso théorique</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Écart</th>
+              </tr>
+            </thead>
+            <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+              {% for row in pos_rows %}
+                <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ row.name }}</td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.stock_out }} {{ row.unit }}
+                  </td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.theoretical }} {{ row.unit }}
+                  </td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.delta }} {{ row.unit }}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">Aucune donnée pour cette période.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="px-6">
+        <div class="text-lg font-semibold">Mini-Four (Boulangerie)</div>
+      </div>
+      <div data-slot="card-content" class="px-6">
+        <div data-slot="table-container" class="relative w-full overflow-x-auto">
+          <table data-slot="table" class="w-full caption-bottom text-sm">
+            <thead data-slot="table-header" class="[&_tr]:border-b">
+              <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Ingrédient</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Sortie stock</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Conso théorique</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Écart</th>
+              </tr>
+            </thead>
+            <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+              {% for row in bakery_rows %}
+                <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ row.name }}</td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.stock_out }} {{ row.unit }}
+                  </td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.theoretical }} {{ row.unit }}
+                  </td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {{ row.delta }} {{ row.unit }}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">Aucune donnée pour cette période.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{ pos_rows_json|json_script:"report-data-pos" }}
+  {{ bakery_rows_json|json_script:"report-data-bakery" }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}

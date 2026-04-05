@@ -35,7 +35,7 @@
         </svg>Ajouter un employé
       </button>
       {% endif %}
-      <input type="hidden" id="permissions" value="{{permissions}}">
+      {{ permissions|json_script:"permissions" }}
       {% csrf_token %}
     </div>
     <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
@@ -60,7 +60,6 @@
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Nom complet</th>
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Rôle</th>
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Email</th>
-                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Salaire</th>
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Référence</th>
                 {% if 'noyau.add_employer' in user.get_all_permissions or 'noyau.change_employer' in user.get_all_permissions or 'noyau.delete_employer' in user.get_all_permissions %}
                 <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">Actions</th>
@@ -93,7 +92,6 @@
                   </td>
 
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">{{employee.email}}</td>
-                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-bold text-primary">{{employee.salary}} KMF</td>
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"><span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden border-transparent bg-primary text-primary-foreground [a&amp;]:hover:bg-primary/90">{{employee.badge_id}}</span></td>
                   {% if 'noyau.add_employer' in user.get_all_permissions or 'noyau.change_employer' in user.get_all_permissions or 'noyau.delete_employer' in user.get_all_permissions %}
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
@@ -134,7 +132,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center py-4">Aucun employé trouvé.</td>
+                    <td colspan="6" class="text-center py-4">Aucun employé trouvé.</td>
                 </tr>
               {% endfor %}
             </tbody>

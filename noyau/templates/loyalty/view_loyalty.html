@@ -47,7 +47,7 @@
       </div>
       {% endif %}
       {% csrf_token %}
-      <input type="hidden" id="loyalties_json" value="{{ loyalties_json }}">
+      {{ loyalties_json|json_script:"loyalties_json" }}
     </div>
     <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
       <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
@@ -72,6 +72,7 @@
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">N° Téléphone</th>
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">Date Création</th>
                 <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] ">Solde Actuel</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] ">Points Actuel</th>
                 {% if 'noyau.add_loyalty' in user.get_all_permissions or 'noyau.add_loyalty' in user.get_all_permissionsor or 'noyau.change_loyalty' in user.get_all_permissions or 'noyau.delete_loyalty' in user.get_all_permissions %}
                 <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">Actions</th>
                 {% endif %}
@@ -85,6 +86,7 @@
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">{{loyalty.phone}}</td>
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]">{{loyalty.date|date:"d/m/Y"}}</td>
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-bold text-primary">{{loyalty.solde}} KMF</td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] font-bold text-primary">{{loyalty.points_balance}}</td>
                   {% if 'noyau.add_loyalty' in user.get_all_permissions or 'noyau.change_loyalty' in user.get_all_permissions or 'noyau.delete_loyalty' in user.get_all_permissions %}
                   <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px] text-right">
                     <div class="flex justify-end gap-1">

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="voucher-page">
+  <div class="voucher-header">
+    <div>
+      <div class="hero-badge">Bons de rendu monnaie</div>
+      <h1 class="voucher-title">Suivi des bons de monnaie</h1>
+      <p class="voucher-subtitle">Consultez les bons emis, utilises et expires.</p>
+    </div>
+    <div class="voucher-summary-inline">
+      <div class="voucher-summary-pill">
+        Total: {{ summary.total_count }} bons
+      </div>
+      <div class="voucher-summary-pill">
+        Montant: {{ summary.total_amount|floatformat:0 }} KMF
+      </div>
+    </div>
+  </div>
+
+  <form method="get" class="voucher-filters">
+    <div class="voucher-filter-row">
+      <div class="voucher-field">
+        <label class="voucher-label">Recherche</label>
+        <input name="q" type="text" value="{{ filters.q }}" placeholder="Code, caissier, ticket..." class="voucher-input" />
+      </div>
+      <div class="voucher-field">
+        <label class="voucher-label">Statut</label>
+        <select name="status" class="voucher-input">
+          <option value="" {% if not filters.status %}selected{% endif %}>Tous</option>
+          <option value="ACTIVE" {% if filters.status == "ACTIVE" %}selected{% endif %}>Actifs</option>
+          <option value="ISSUED" {% if filters.status == "ISSUED" %}selected{% endif %}>Emis</option>
+          <option value="REDEEMED" {% if filters.status == "REDEEMED" %}selected{% endif %}>Utilises</option>
+          <option value="EXPIRED" {% if filters.status == "EXPIRED" %}selected{% endif %}>Expires</option>
+          <option value="VOID" {% if filters.status == "VOID" %}selected{% endif %}>Annules</option>
+        </select>
+      </div>
+      <div class="voucher-field">
+        <label class="voucher-label">Du</label>
+        <input name="start" type="date" value="{{ filters.start }}" class="voucher-input" />
+      </div>
+      <div class="voucher-field">
+        <label class="voucher-label">Au</label>
+        <input name="end" type="date" value="{{ filters.end }}" class="voucher-input" />
+      </div>
+    </div>
+    <div class="voucher-filter-actions">
+      <button data-slot="button" class="voucher-button" type="submit">Filtrer</button>
+      <a href="{% url 'view_cash_change_vouchers' %}" class="voucher-button ghost">Reinitialiser</a>
+    </div>
+  </form>
+
+  <div class="voucher-summary-grid">
+    <div class="voucher-card">
+      <p class="voucher-card-label">Bons actifs</p>
+      <p class="voucher-card-value">{{ summary.active_count }}</p>
+      <p class="voucher-card-sub">Emis: {{ summary.issued_amount|floatformat:0 }} KMF</p>
+    </div>
+    <div class="voucher-card">
+      <p class="voucher-card-label">Bons utilises</p>
+      <p class="voucher-card-value">{{ summary.redeemed_count }}</p>
+      <p class="voucher-card-sub">Montant: {{ summary.redeemed_amount|floatformat:0 }} KMF</p>
+    </div>
+    <div class="voucher-card">
+      <p class="voucher-card-label">Bons expires</p>
+      <p class="voucher-card-value">{{ summary.expired_count }}</p>
+      <p class="voucher-card-sub">Montant: {{ summary.expired_amount|floatformat:0 }} KMF</p>
+    </div>
+    <div class="voucher-card">
+      <p class="voucher-card-label">Bons annules</p>
+      <p class="voucher-card-value">{{ summary.void_count }}</p>
+      <p class="voucher-card-sub">Montant: {{ summary.void_amount|floatformat:0 }} KMF</p>
+    </div>
+  </div>
+
+  <div class="voucher-table-card">
+    <table class="voucher-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Montant</th>
+          <th>Emis le</th>
+          <th>Expire le</th>
+          <th>Statut</th>
+          <th>Caissier</th>
+          <th>Ticket</th>
+          <th>Utilise le</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for voucher in vouchers %}
+          <tr>
+            <td class="voucher-code">{{ voucher.code }}</td>
+            <td>{{ voucher.amount|floatformat:0 }} KMF</td>
+            <td>{{ voucher.issued_at|date:"d/m/Y" }} {{ voucher.issued_at|date:"H:i" }}</td>
+            <td>{{ voucher.expires_at|date:"d/m/Y" }}</td>
+            <td>
+              <span class="status-pill status-{{ voucher.status|lower }}">{{ voucher.get_status_display }}</span>
+            </td>
+            <td>
+              {% if voucher.issued_by and voucher.issued_by.user %}
+                {{ voucher.issued_by.user.first_name }} {{ voucher.issued_by.user.last_name }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>{% if voucher.issued_transaction %}#{{ voucher.issued_transaction.id }}{% else %}—{% endif %}</td>
+            <td>{% if voucher.redeemed_at %}{{ voucher.redeemed_at|date:"d/m/Y" }} {{ voucher.redeemed_at|date:"H:i" }}{% else %}—{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="voucher-empty">Aucun bon trouve.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

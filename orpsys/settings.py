@@ -19,13 +19,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+ENVIRONMENT = os.getenv("DJANGO_ENV", "development").lower()
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--0y_i_&&g3r0tyd)6w!-=3dfheuaaxy*-9l(shuu$5tkn#=8lp'
+DEFAULT_SECRET_KEY = "django-insecure--0y_i_&&g3r0tyd)6w!-=3dfheuaaxy*-9l(shuu$5tkn#=8lp"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "1" if ENVIRONMENT != "production" else "0") == "1"
 
-ALLOWED_HOSTS = ["*"]
+_raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [host.strip() for host in _raw_hosts.split(",") if host.strip()]
+if not ALLOWED_HOSTS:
+    if ENVIRONMENT == "production":
+        raise RuntimeError("DJANGO_ALLOWED_HOSTS must be set in production.")
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver", "192.168.88.7"]
+
+if ENVIRONMENT == "production" and SECRET_KEY == DEFAULT_SECRET_KEY:
+    raise RuntimeError("DJANGO_SECRET_KEY must be set in production.")
 
 
 # Application definition
@@ -42,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,14 +88,33 @@ WSGI_APPLICATION = 'orpsys.wsgi.application'
 
 DATABASES = {
     'default': {
-        "ENGINE": "mysql.connector.django",
-        'NAME': 'orpsys_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1', 
-        'PORT': '3306',
+        "ENGINE": os.getenv("DB_ENGINE", "mysql.connector.django"),
+        'NAME': os.getenv("DB_NAME", "orpsys_db"),
+        'USER': os.getenv("DB_USER", "root"),
+        'PASSWORD': os.getenv("DB_PASSWORD", ""),
+        'HOST': os.getenv("DB_HOST", "127.0.0.1"),
+        'PORT': os.getenv("DB_PORT", "3306"),
+        'CONN_MAX_AGE': int(os.getenv("DB_CONN_MAX_AGE", "60")),
     }
 }
+
+_db_test_name = os.getenv("DB_TEST_NAME")
+if _db_test_name:
+    DATABASES["default"]["TEST"] = {"NAME": _db_test_name}
+
+if ENVIRONMENT == "production":
+    missing_db = [
+        key
+        for key, value in {
+            "DB_NAME": os.getenv("DB_NAME"),
+            "DB_USER": os.getenv("DB_USER"),
+            "DB_PASSWORD": os.getenv("DB_PASSWORD"),
+            "DB_HOST": os.getenv("DB_HOST"),
+        }.items()
+        if not value
+    ]
+    if missing_db:
+        raise RuntimeError(f"Missing required database settings in production: {', '.join(missing_db)}")
 
 
 # Password validation
@@ -108,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr'
 
 USE_TZ = True
 
@@ -117,6 +148,9 @@ TIME_ZONE = 'Indian/Comoro'
 USE_I18N = True
 
 USE_L10N = True
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "view_dashboard"
 
 
 # Static files (CSS, JavaScript, Images)
@@ -129,8 +163,104 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+if ENVIRONMENT == "production":
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+SECURE_SETTINGS_ENABLED = ENVIRONMENT == "production" or os.getenv("DJANGO_SECURE", "0") == "1"
+SESSION_COOKIE_SECURE = SECURE_SETTINGS_ENABLED
+CSRF_COOKIE_SECURE = SECURE_SETTINGS_ENABLED
+SECURE_SSL_REDIRECT = SECURE_SETTINGS_ENABLED
+SECURE_HSTS_SECONDS = int(
+    os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000" if SECURE_SETTINGS_ENABLED else "0")
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_SETTINGS_ENABLED
+SECURE_HSTS_PRELOAD = SECURE_SETTINGS_ENABLED
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+if os.getenv("DJANGO_SECURE_PROXY_SSL_HEADER", "0") == "1":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_FAILURE_VIEW = "noyau.views.csrf_failure"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "orpsys-cache",
+    }
+}
+
+LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO")
+SQL_LOG_LEVEL = os.getenv("DJANGO_SQL_LOG_LEVEL", "WARNING")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        },
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {module}:{lineno} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.utils.autoreload": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": SQL_LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}
+
+log_file = os.getenv("DJANGO_LOG_FILE")
+if log_file:
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "verbose",
+        "filename": log_file,
+        "maxBytes": 5 * 1024 * 1024,
+        "backupCount": 3,
+    }
+    LOGGING["loggers"]["django"]["handlers"].append("file")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

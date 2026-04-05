@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block script %}sale/view_sale.js{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6 space-y-6">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+            <a
+                href="{% url 'view_dashboard' %}"
+                data-slot="button"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-arrow-left h-4 w-4"
+                >
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold">Historique des ventes</h1>
+                <p class="text-muted-foreground text-sm">Caisse et mini-four avec montants, remises et points fidélité.</p>
+            </div>
+            </div>
+        <div class="flex items-center gap-2">
+            <button id="btn-shift-report" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                Rapport de shift (PDF)
+            </button>
+        </div>
+        {% csrf_token %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Tickets Caisse</p>
+            <p class="text-2xl font-bold">{{ pos_summary.count }}</p>
+            <p class="text-xs text-muted-foreground mt-1">CA net: {{ pos_summary.net_amount|floatformat:0 }} KMF</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">CA Caisse Brut</p>
+            <p class="text-2xl font-bold">{{ pos_summary.gross_amount|floatformat:0 }} KMF</p>
+            <p class="text-xs text-muted-foreground mt-1">Remises: {{ pos_summary.discount_amount|floatformat:0 }} KMF</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Points Fidélité</p>
+            <p class="text-2xl font-bold">+{{ pos_summary.points_earned }} / -{{ pos_summary.points_redeemed }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Gagnés / Utilisés</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Ventes Mini-Four Payées</p>
+            <p class="text-2xl font-bold">{{ bakery_summary.count }}</p>
+            <p class="text-xs text-muted-foreground mt-1">CA: {{ bakery_summary.net_amount|floatformat:0 }} KMF</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Total Opérations</p>
+            <p class="text-2xl font-bold">{{ overall_summary.count }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Caisse + Mini-Four</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">CA Global</p>
+            <p class="text-2xl font-bold">{{ overall_summary.net_amount|floatformat:0 }} KMF</p>
+            <p class="text-xs text-muted-foreground mt-1">Net encaissé</p>
+        </div>
+    </div>
+
+    <div dir="ltr" data-orientation="horizontal" data-slot="tabs" class="flex flex-col gap-2 w-full">
+        <div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" class="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid w-full grid-cols-2 mb-2" tabindex="0" data-orientation="horizontal" style="outline: none">
+            <button type="button" role="tab" aria-selected="true" aria-controls="cash-panel" data-state="active" id="today-button" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4" tabindex="0" data-orientation="horizontal" data-radix-collection-item="">
+                Caisse
+            </button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="bakery-panel" data-state="inactive" id="all-button" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4" tabindex="-1" data-orientation="horizontal" data-radix-collection-item="">
+                Mini-Four
+            </button>
+        </div>
+    </div>
+
+    <div data-state="active" data-orientation="horizontal" role="tabpanel" aria-labelledby="today-button" id="cash-panel" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4">
+        <div class="flex justify-end">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="w-64">
+                    <label for="employer-transaction" class="block mb-1 text-sm font-medium text-foreground">Employé</label>
+                    <select id="employer-transaction" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                        <option value="" selected>Tous les employés</option>
+                        {% for item in usernames %}
+                            <option value="{{ item.username }}">{{ item.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="w-56">
+                    <label for="start-date-transaction" class="block mb-1 text-sm font-medium text-foreground">Date de début</label>
+                    <input id="start-date-transaction" type="date" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                </div>
+                <div class="w-56">
+                    <label for="end-date-transaction" class="block mb-1 text-sm font-medium text-foreground">Date de fin</label>
+                    <input id="end-date-transaction" type="date" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                </div>
+            </div>
+        </div>
+
+        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6">
+                <div data-slot="card-title" class="leading-none font-semibold">Historique des ventes Caisse</div>
+                <div data-slot="card-description" class="text-muted-foreground text-sm">Détail complet des tickets avec brut, remise, total et points.</div>
+            </div>
+
+            <div data-slot="card-content" class="px-6">
+                <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                    <table data-slot="table" class="w-full caption-bottom text-sm" id="transactionTable">
+                        <thead data-slot="table-header" class="[&_tr]:border-b">
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Date</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Client</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Employé</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Heure</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Paiement</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Brut</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Remise</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Total</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Pts +</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Pts -</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+                            {% for transaction in transactions %}
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ transaction.date }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ transaction.client }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ transaction.username }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ transaction.time }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ transaction.payment_method }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">{{ transaction.gross_amount|floatformat:0 }} KMF</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">{{ transaction.discount_amount|floatformat:0 }} KMF</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right font-semibold">{{ transaction.total_amount|floatformat:0 }} KMF</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">{{ transaction.points_earned }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">{{ transaction.points_redeemed }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <button data-id="{{ transaction.id }}" data-slot="button" class="view-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 bg-transparent">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye h-4 w-4">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center py-4">Aucune vente trouvée.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between px-2 py-4" id="transactionPagination">
+                    <div class="text-sm text-muted-foreground"></div>
+                    <div class="flex items-center space-x-2">
+                        <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left h-4 w-4">
+                                <path d="m11 17-5-5 5-5"></path>
+                                <path d="m18 17-5-5 5-5"></path>
+                            </svg>
+                        </button>
+                        <div class="text-sm font-medium page-number"></div>
+                        <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-right h-4 w-4">
+                                <path d="m6 17 5-5-5-5"></path>
+                                <path d="m13 17 5-5-5-5"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="all-button" id="bakery-panel" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none space-y-4" hidden="">
+        <div class="flex justify-end">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="w-64">
+                    <label for="employer-sale" class="block mb-1 text-sm font-medium text-foreground">Employé</label>
+                    <select id="employer-sale" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                        <option value="" selected>Tous les employés</option>
+                        {% for item in employers %}
+                            <option value="{{ item.username }}">{{ item.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="w-56">
+                    <label for="start-date-sale" class="block mb-1 text-sm font-medium text-foreground">Date de début</label>
+                    <input id="start-date-sale" type="date" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                </div>
+                <div class="w-56">
+                    <label for="end-date-sale" class="block mb-1 text-sm font-medium text-foreground">Date de fin</label>
+                    <input id="end-date-sale" type="date" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                </div>
+            </div>
+        </div>
+
+        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6">
+                <div data-slot="card-title" class="leading-none font-semibold">Historique des ventes Mini-Four</div>
+                <div data-slot="card-description" class="text-muted-foreground text-sm">Commandes payées avec client, retrait, paiement et montant.</div>
+            </div>
+            <div data-slot="card-content" class="px-6">
+                <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                    <table data-slot="table" class="w-full caption-bottom text-sm" id="saleTable">
+                        <thead data-slot="table-header" class="[&_tr]:border-b">
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Date de retrait</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Client</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">N° Téléphone</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Employé</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Heure</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Paiement</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Date de création</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 text-right align-middle font-medium whitespace-nowrap">Montant</th>
+                                <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap text-right">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+                            {% for sale in sales %}
+                            <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ sale.pickup_date }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.client }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.phone }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.username }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.pickup_time }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.payment_method }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ sale.date }}</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right font-semibold">{{ sale.total_amount|floatformat:0 }} KMF</td>
+                                <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <button data-id="{{ sale.id }}" data-slot="button" class="view-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 bg-transparent">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye h-4 w-4">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">Aucune vente trouvée.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex items-center justify-between px-2 py-4" id="pagination">
+                    <div class="text-sm text-muted-foreground"></div>
+                    <div class="flex items-center space-x-2">
+                        <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left h-4 w-4">
+                                <path d="m11 17-5-5 5-5"></path>
+                                <path d="m18 17-5-5 5-5"></path>
+                            </svg>
+                        </button>
+                        <div class="text-sm font-medium page-number"></div>
+                        <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-right h-4 w-4">
+                                <path d="m6 17 5-5-5-5"></path>
+                                <path d="m13 17 5-5-5-5"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalContainer"></div>
+{% endblock %}

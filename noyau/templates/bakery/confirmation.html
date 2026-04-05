@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Salimamoud ERP Système</title>
+        <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
+        <link href="{% static 'css/confirmation.css' %}" rel="stylesheet" />
+        <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="min-h-screen bg-secondary/30">
+            <header class="bg-background border-b border-border sticky top-0 z-10">
+                <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+                    <a href="{% url 'view_bakery' %}" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-6 w-6">
+                            <path d="m12 19-7-7 7-7"></path>
+                            <path d="M19 12H5"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-foreground">
+                        Boulangerie – Confirmation de la commande
+                    </h1>
+                </div>
+            </header>
+            <main class="container mx-auto px-4 py-8 max-w-5xl">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <form id="addForm" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" id="payment_method" name="payment_method" value="Espèces">
+                        <input type="hidden" id="items" name="items">
+                        {% csrf_token %}
+                        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border shadow-sm p-6">
+                            <h2 class="text-xl font-bold mb-6 text-foreground">
+                                Informations Client
+                            </h2>
+                            <div class="space-y-4 mb-6">
+                                <div>
+                                    <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" for="name">
+                                        Date de retrait *
+                                    </label>
+                                    <input
+                                        data-slot="input"
+                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-1"
+                                        id="pickup_date"
+                                        value=""
+                                        required
+                                        name="pickup_date"
+                                        type="date"
+                                    />
+                                </div>
+                                <div>
+                                    <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" for="name">
+                                        Heure de retrait *
+                                    </label>
+                                    <input
+                                        data-slot="input"
+                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-1"
+                                        id="time"
+                                        value=""
+                                        required
+                                        name="time"
+                                        type="time"
+                                    />
+                                </div>
+                                <div>
+                                    <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" for="name">
+                                        Nom du Client *
+                                    </label>
+                                    <input
+                                        data-slot="input"
+                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-1"
+                                        id="name"
+                                        placeholder="Jean Dupont"
+                                        value=""
+                                        required
+                                        name="name"
+                                    />
+                                </div>
+                                <div>
+                                    <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" for="company" >
+                                        N° Téléphone *
+                                    </label>
+                                    <input
+                                        data-slot="input"
+                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-1"
+                                        id="phone"
+                                        placeholder="+269 345 67 20"
+                                        value=""
+                                        required
+                                        name="phone"
+                                    />
+                                </div>
+                            </div>
+                            <h3 class="font-semibold mb-4 text-foreground">
+                                Méthode de Paiement
+                            </h3>
+                            <div class="space-y-3 mb-6">
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors border-primary bg-primary/10">
+                                    <div class="font-semibold text-foreground">Espèces</div>
+                                    <div class="text-sm text-muted-foreground">
+                                        Paiement en liquide
+                                    </div>
+                                </button>
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors border-border hover:border-primary/50">
+                                    <div class="font-semibold text-foreground">Mvola</div>
+                                    <div class="text-sm text-muted-foreground">
+                                        Paiement mobile sécurisé via Mvola
+                                    </div>
+                                </button>
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors border-border hover:border-primary/50">
+                                    <div class="font-semibold text-foreground">Chèque</div>
+                                    <div class="text-sm text-muted-foreground">Paiement par chèque à l’ordre de notre établissement</div>
+                                </button>
+                            </div>
+                            <button
+                                id="confirmBtn"
+                                type="submit"
+                                data-slot="button"
+                                class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full"
+                                disabled="">
+                                Confirmer la commande
+                            </button>
+                        </div>
+                    </form>
+                    <div id="summary">
+                    </div>
+                </div>
+            </main>
+        </div>
+        <div id="modalContainer"></div>
+        <script src="{% static 'js/app.js' %}"></script>
+        <script src="{% static 'js/noyau/bakery/confirmation.js' %}"></script>
+    </body>
+</html>

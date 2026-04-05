@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pyromane Grill</title>
+    <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
+    <link href="{% static 'css/bakery.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
+  </head>
+  <body class="pyromane-body">
+    {{ products|json_script:"products" }}
+    {% csrf_token %}
+    <div class="pyromane-shell">
+      <header class="pyromane-header">
+        <div class="container mx-auto px-4 py-4 pyromane-header-inner">
+          <div class="pyromane-header-title">
+            <p class="pyromane-eyebrow">Commandes a produire</p>
+            <h1 class="pyromane-title">Pyromane Grill</h1>
+          </div>
+          <div class="pos-actions">
+            <button id="btn-cart" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&>svg]:px-4 relative" disabled="">
+            </button>
+            <a id="btn-logout" href="{% url 'logout' %}" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Déconnexion
+            </a>
+          </div>
+        </div>
+      </header>
+      <main class="container mx-auto px-4 py-8 pyromane-main">
+        <section class="pyromane-hero">
+          <div class="pyromane-hero-text">
+            <h2>Commandes rapides, suivi clair.</h2>
+            <p>Chaque commande prise ici s'affiche instantanement a la caisse avec son numero.</p>
+          </div>
+          <div class="pyromane-hero-card">
+            <div class="pyromane-hero-label">Flux Pyromane</div>
+            <div class="pyromane-hero-value">Tablette → Caisse</div>
+          </div>
+        </section>
+        <div id="list-products" class="pyromane-products"></div>
+      </main>
+    </div>
+    <div id="modalContainer"></div>
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/noyau/pyromane/view_pyromane.js' %}"></script>
+  </body>
+</html>

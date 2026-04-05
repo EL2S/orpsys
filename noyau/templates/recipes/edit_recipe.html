@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block script %}recipes/edit_recipe.js{% endblock %}
+{% block content %}
+  <div class="container mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        {% if domain == "pos" %}
+          <a
+            href="{% url 'view_sale_recipes' %}"
+            data-slot="button"
+            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground size-9"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4">
+              <path d="m12 19-7-7 7-7"></path>
+              <path d="M19 12H5"></path>
+            </svg>
+          </a>
+        {% else %}
+          <a
+            href="{% url 'view_bakery_recipes' %}"
+            data-slot="button"
+            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground size-9"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4">
+              <path d="m12 19-7-7 7-7"></path>
+              <path d="M19 12H5"></path>
+            </svg>
+          </a>
+        {% endif %}
+        <div>
+          <div class="text-sm text-muted-foreground">Recettes {{ domain_label }}</div>
+          <h1 class="text-3xl font-bold">{{ product.name }}</h1>
+        </div>
+      </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-content" class="px-6">
+        <form method="post" class="space-y-6">
+          {% csrf_token %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium">Quantité de rendement</label>
+              <input
+                data-slot="input"
+                class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+                name="yield_quantity"
+                type="number"
+                step="0.01"
+                value="{{ recipe.yield_quantity|default_if_none:'1.00' }}"
+                required
+              />
+            </div>
+            <div class="space-y-2">
+              <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium">Unité de rendement</label>
+              <select
+                data-slot="input"
+                class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+                name="yield_unit"
+                required
+              >
+                {% with current=recipe.yield_unit|default_if_none:"unité" %}
+                  <option value="kg" {% if current == "kg" %}selected{% endif %}>Kilogramme (kg)</option>
+                  <option value="g" {% if current == "g" %}selected{% endif %}>Gramme (g)</option>
+                  <option value="mg" {% if current == "mg" %}selected{% endif %}>Milligramme (mg)</option>
+                  <option value="L" {% if current == "L" %}selected{% endif %}>Litre (L)</option>
+                  <option value="dl" {% if current == "dl" %}selected{% endif %}>Décilitre (dl)</option>
+                  <option value="cl" {% if current == "cl" %}selected{% endif %}>Centilitre (cl)</option>
+                  <option value="ml" {% if current == "ml" %}selected{% endif %}>Millilitre (ml)</option>
+                  <option value="pce" {% if current == "pce" %}selected{% endif %}>Pièce (pce)</option>
+                  <option value="sachet" {% if current == "sachet" %}selected{% endif %}>Sachet</option>
+                  <option value="paquet" {% if current == "paquet" %}selected{% endif %}>Paquet</option>
+                  <option value="bte" {% if current == "bte" %}selected{% endif %}>Boîte (bte)</option>
+                  <option value="carton" {% if current == "carton" %}selected{% endif %}>Carton</option>
+                  <option value="bouteille" {% if current == "bouteille" %}selected{% endif %}>Bouteille</option>
+                  <option value="bidon" {% if current == "bidon" %}selected{% endif %}>Bidon</option>
+                  <option value="barquette" {% if current == "barquette" %}selected{% endif %}>Barquette</option>
+                  <option value="plateau" {% if current == "plateau" %}selected{% endif %}>Plateau</option>
+                  <option value="rouleau" {% if current == "rouleau" %}selected{% endif %}>Rouleau</option>
+                  <option value="botte" {% if current == "botte" %}selected{% endif %}>Botte</option>
+                  <option value="cube" {% if current == "cube" %}selected{% endif %}>Cube</option>
+                  <option value="portion" {% if current == "portion" %}selected{% endif %}>Portion</option>
+                  <option value="tranche" {% if current == "tranche" %}selected{% endif %}>Tranche</option>
+                  <option value="bande" {% if current == "bande" %}selected{% endif %}>Bande</option>
+                  <option value="boule" {% if current == "boule" %}selected{% endif %}>Boule</option>
+                  <option value="unité" {% if current == "unité" %}selected{% endif %}>Unité (u)</option>
+                {% endwith %}
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium">Note</label>
+            <input
+              data-slot="input"
+              class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+              name="note"
+              type="text"
+              value="{{ recipe.note|default_if_none:'' }}"
+              placeholder="Informations complémentaires"
+            />
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-lg font-semibold">Ingrédients</div>
+                <div class="text-sm text-muted-foreground">Ajoutez les matières premières et leurs quantités.</div>
+              </div>
+              <button type="button" id="add-ingredient" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                Ajouter une ligne
+              </button>
+            </div>
+
+            <div id="ingredient-rows" class="space-y-3">
+              {% for item in items %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 ingredient-row">
+                  <select name="raw_material_id[]" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none">
+                    <option value="">Choisir un ingrédient</option>
+                    {% for material in raw_materials %}
+                      <option value="{{ material.id }}" {% if material.id == item.raw_material_id %}selected{% endif %}>
+                        {{ material.name }} ({{ material.unit }})
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <input
+                    name="quantity[]"
+                    type="number"
+                    step="0.01"
+                    class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+                    value="{{ item.quantity }}"
+                    placeholder="Quantité"
+                  />
+                  <button type="button" data-action="remove" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background shadow-xs hover:bg-destructive/10 hover:text-destructive h-9 px-4 py-2">
+                    Retirer
+                  </button>
+                </div>
+              {% empty %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 ingredient-row">
+                  <select name="raw_material_id[]" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none">
+                    <option value="">Choisir un ingrédient</option>
+                    {% for material in raw_materials %}
+                      <option value="{{ material.id }}">{{ material.name }} ({{ material.unit }})</option>
+                    {% endfor %}
+                  </select>
+                  <input
+                    name="quantity[]"
+                    type="number"
+                    step="0.01"
+                    class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+                    placeholder="Quantité"
+                  />
+                  <button type="button" data-action="remove" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background shadow-xs hover:bg-destructive/10 hover:text-destructive h-9 px-4 py-2">
+                    Retirer
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+
+            <template id="ingredient-row-template">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 ingredient-row">
+                <select name="raw_material_id[]" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none">
+                  <option value="">Choisir un ingrédient</option>
+                  {% for material in raw_materials %}
+                    <option value="{{ material.id }}">{{ material.name }} ({{ material.unit }})</option>
+                  {% endfor %}
+                </select>
+                <input
+                  name="quantity[]"
+                  type="number"
+                  step="0.01"
+                  class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none"
+                  placeholder="Quantité"
+                />
+                <button type="button" data-action="remove" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background shadow-xs hover:bg-destructive/10 hover:text-destructive h-9 px-4 py-2">
+                  Retirer
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <div class="flex justify-end">
+            <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2" type="submit">
+              Enregistrer la recette
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

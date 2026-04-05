@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block script %}empty.js{% endblock %}
+{% block content %}
+  <div class="container mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a
+          href="{% url 'view_dashboard' %}"
+          data-slot="button"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground size-9"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4">
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+        </a>
+        <h1 class="text-3xl font-bold">{{ page_title }}</h1>
+      </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6">
+        <div class="flex items-center justify-between">
+          <div data-slot="card-title" class="leading-none font-semibold">Liste des recettes</div>
+          <div class="text-sm text-muted-foreground">Catégorie : {{ domain_label }}</div>
+        </div>
+      </div>
+      <div data-slot="card-content" class="px-6">
+        <div data-slot="table-container" class="relative w-full overflow-x-auto">
+          <table data-slot="table" class="w-full caption-bottom text-sm">
+            <thead data-slot="table-header" class="[&_tr]:border-b">
+              <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Produit</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Rendement</th>
+                <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Statut</th>
+                {% if 'noyau.change_salerecipe' in user.get_all_permissions or 'noyau.change_bakeryrecipe' in user.get_all_permissions or 'noyau.add_salerecipe' in user.get_all_permissions or 'noyau.add_bakeryrecipe' in user.get_all_permissions %}
+                  <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap text-right">Actions</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+              {% for row in rows %}
+                <tr data-slot="table-row" class="hover:bg-muted/50 border-b transition-colors">
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ row.product.name }}</td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {% if row.recipe %}
+                      {{ row.recipe.yield_quantity }} {{ row.recipe.yield_unit }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                    {% if row.recipe %}
+                      <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 border-transparent bg-secondary text-secondary-foreground">
+                        Recette définie
+                      </span>
+                    {% else %}
+                      <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 border-transparent bg-destructive text-white">
+                        À configurer
+                      </span>
+                    {% endif %}
+                  </td>
+                  {% if 'noyau.change_salerecipe' in user.get_all_permissions or 'noyau.change_bakeryrecipe' in user.get_all_permissions or 'noyau.add_salerecipe' in user.get_all_permissions or 'noyau.add_bakeryrecipe' in user.get_all_permissions %}
+                    <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">
+                      {% if domain == "pos" %}
+                        <a href="{% url 'edit_sale_recipe' row.product.id %}" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                          Gérer
+                        </a>
+                      {% else %}
+                        <a href="{% url 'edit_bakery_recipe' row.product.id %}" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                          Gérer
+                        </a>
+                      {% endif %}
+                    </td>
+                  {% endif %}
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">Aucune recette trouvée.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

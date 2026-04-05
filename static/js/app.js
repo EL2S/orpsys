@@ -1,53 +1,85 @@
+window.safeJson = async function (res) {
+    const contentType = res.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+
+    if (!res.ok) {
+        if (isJson) {
+            const body = await res.json().catch(() => ({}));
+            const message = body && body.error ? body.error : `Erreur HTTP ${res.status}`;
+            throw new Error(message);
+        }
+        const text = await res.text().catch(() => '');
+        throw new Error(text || `Erreur HTTP ${res.status}`);
+    }
+
+    if (!isJson) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text ? `Réponse non-JSON: ${text.slice(0, 160)}` : 'Réponse non-JSON');
+    }
+
+    return res.json();
+};
+
 document.addEventListener('DOMContentLoaded', function () {
-    const navLinks = document.querySelectorAll('nav a'); // Tous les liens dans le nav
-    const currentUrl = window.location.pathname; // URL actuelle
-    const closeBtn = document.getElementById("close-menu");
-    const translateFull = document.getElementById("translate-x-full");
-    const screenView = document.getElementById("screen-hidden");
-    const openBtn = document.getElementById("open-menu");
-    const customItems = document.querySelectorAll(".custom-items");
-    customItems.forEach(link => {
+    const shell = document.querySelector('.app-shell');
+    const navLinks = document.querySelectorAll('[data-nav-link]');
+    const currentUrl = window.location.pathname;
+    const closeBtn = document.getElementById('close-menu');
+    const overlay = document.getElementById('screen-hidden');
+    const openBtn = document.getElementById('open-menu');
+
+    const setActiveLink = (link) => {
+        const href = link.getAttribute('href');
+        if (!href) {
+            return false;
+        }
+
+        const isActive =
+            currentUrl === href ||
+            (href !== '/' && (currentUrl.startsWith(`${href}/`) || currentUrl.startsWith(`${href}?`)));
+
+        link.classList.toggle('nav-link--active', isActive);
+        return isActive;
+    };
+
+    navLinks.forEach((link) => {
+        setActiveLink(link);
         link.addEventListener('click', function () {
-            if (screenView) screenView.className = "";
-            if (translateFull) translateFull.className = "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0";
+            if (shell) {
+                shell.classList.remove('is-open');
+            }
         });
     });
-    navLinks.forEach(link => {
-        const svg = link.querySelector('svg');
-        const defaultLinkClass = "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800";
-        const activeLinkClass = "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
 
-        const defaultSvgClass = "lucide h-5 w-5 text-slate-400";
-        const activeSvgClass = "lucide h-5 w-5 text-amber-600";
-
-        // Appliquer la classe par défaut
-        link.className = defaultLinkClass;
-        if (svg) svg.className.baseVal = defaultSvgClass;
-
-        // Vérifier si le href correspond à l'URL actuelle
-        if (link.getAttribute('href') === currentUrl) {
-            link.className = activeLinkClass;
-            if (svg) svg.className.baseVal = activeSvgClass;
+    const openMenu = () => {
+        if (shell) {
+            shell.classList.add('is-open');
         }
-    });
+    };
+
+    const closeMenu = () => {
+        if (shell) {
+            shell.classList.remove('is-open');
+        }
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', openMenu);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeMenu);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeMenu);
+    }
+
     const logouts = document.querySelectorAll('.button-logout');
-    logouts.forEach(button => {
+    logouts.forEach((button) => {
         button.addEventListener('click', function (event) {
             event.preventDefault();
             window.location.href = `/logout/`;
         });
     });
-    
-    if(closeBtn){
-        closeBtn.addEventListener('click', function () {
-            screenView.className = "";
-            translateFull.className = "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0";
-        });
-    }
-    if(openBtn){
-        openBtn.addEventListener('click', function () {
-            screenView.className = "fixed inset-0 bg-black/50 z-20 lg:hidden";
-            translateFull.className = "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out lg:translate-x-0";
-        });
-    }
 });

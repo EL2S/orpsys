@@ -8,252 +8,318 @@
     <title>Salimamoud ERP Système</title>
     <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
     <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
   </head>
-  <body>
-    <input type="hidden" id="loyalties_json" value="{{ loyalties_json }}">
+  <body class="pos-body">
+    {{ loyalties_json|json_script:"loyalties_json" }}
     {% csrf_token %}
-    <div class="h-screen flex flex-col bg-muted/30">
-      <header
-        class="bg-background border-b p-4 flex items-center justify-between"
-      >
-        <div class="flex items-center gap-4">
-          <a
-            href="{% url 'view_dashboard' %}"
-            data-slot="button"
-            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="lucide lucide-arrow-left h-4 w-4"
-            >
-              <path d="m12 19-7-7 7-7"></path>
-              <path d="M19 12H5"></path>
-            </svg>
-          </a>
-          <h1 class="text-xl font-bold">Caisse Enregistreuse</h1>
+    <div class="pos-shell">
+      <header class="pos-topbar">
+        <div class="pos-title">
+          <div>
+            <h1 class="pos-heading">Caisse Enregistreuse</h1>
+            <p class="pos-subheading">Interface tactile rapide et claire</p>
+          </div>
         </div>
-        <div class="flex items-center gap-4">
-          <div class="filter-items gap-2 bg-background border rounded-md p-1">
+        <div class="pos-actions">
+          <button id="btn-abimes" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Abîmés
+          </button>
+          <button id="btn-remises" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Remises
+          </button>
+          <button id="btn-consumptions" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Consommations
+          </button>
+          <button id="btn-expenses" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Dépenses
+          </button>
+          <button id="btn-pyromane" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Pyromane
+            <span class="pos-action-badge is-hidden" data-role="pyromane-count">0</span>
+          </button>
+          <a href="{% url 'view_order' %}" id="btn-mini-four" data-slot="button" class="pos-action-button inline-flex items-center justify-center whitespace-nowrap text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-green-600">
+            Mini-Four
+            <span class="pos-action-badge is-hidden" data-role="mini-four-count">0</span>
+          </a>
+          <a id="btn-logout" href="{% url 'logout' %}" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Déconnexion
+          </a>
+        </div>
+      </header>
+      <div class="pos-filters">
+        <div class="pos-search">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4 text-muted-foreground"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <input
+            id="search-product"
+            data-slot="input"
+            type="text"
+            placeholder="Rechercher un produit..."
+            class="pos-search-input"
+          />
+        </div>
+        <div class="pos-resale-bundle">
+          <button id="btn-resale-stock" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Entrée Vente en dépôt
+          </button>
+          <div class="pos-resale-total">
+            <span class="pos-resale-label">Vente en dépôt</span>
+            <span id="resale-total" class="pos-resale-value">{{ resale_total|floatformat:0 }} KMF</span>
+          </div>
+        </div>
+        <div class="pos-resale-bundle">
+          <button id="btn-ar-stock" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Entrée Achat &amp; Revente
+          </button>
+          <div class="pos-resale-total">
+            <span class="pos-resale-label">Achat &amp; Revente</span>
+            <span id="ar-total" class="pos-resale-value">{{ ar_total|floatformat:0 }} KMF</span>
+          </div>
+        </div>
+        <div class="filter-items pos-filter-items">
             <button
               data-slot="button"
               data-filter="Tout"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 rounded-full gap-1.5 px-3"
             >
               Tout</button
             ><button
               data-slot="button"
               data-filter="A"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               A</button
             ><button
               data-slot="button"
               data-filter="B"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               B
             </button>
             <button
               data-slot="button"
               data-filter="C"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               C
             </button>
             <button
               data-slot="button"
               data-filter="D"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               D
             </button>
             <button
               data-slot="button"
               data-filter="E"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               E
             </button>
             <button
               data-slot="button"
               data-filter="F"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               F
             </button>
             <button
               data-slot="button"
               data-filter="G"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               G
             </button>
             <button
               data-slot="button"
               data-filter="H"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               H
             </button>
             <button
               data-slot="button"
               data-filter="I"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               I
             </button>
             <button
               data-slot="button"
               data-filter="J"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               J
             </button>
             <button
               data-slot="button"
               data-filter="K"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               K
             </button>
             <button
               data-slot="button"
               data-filter="L"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               L
             </button>
             <button
               data-slot="button"
               data-filter="M"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               M
             </button>
             <button
               data-slot="button"
               data-filter="N"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               N
             </button>
             <button
               data-slot="button"
               data-filter="O"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               O
             </button>
             <button
               data-slot="button"
               data-filter="P"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               P
             </button>
             <button
               data-slot="button"
               data-filter="Q"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               Q
             </button>
             <button
               data-slot="button"
               data-filter="R"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               R
             </button>
             <button
               data-slot="button"
               data-filter="S"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               S
             </button>
             <button
               data-slot="button"
               data-filter="T"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               T
             </button>
             <button
               data-slot="button"
               data-filter="U"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               U
             </button>
             <button
               data-slot="button"
               data-filter="V"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               V
             </button>
             <button
               data-slot="button"
               data-filter="W"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               W
             </button>
             <button
               data-slot="button"
               data-filter="X"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               X
             </button>
             <button
               data-slot="button"
               data-filter="Y"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               Y
             </button>
             <button
               data-slot="button"
               data-filter="Z"
-              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5"
+              class="filter-button inline-flex items-center justify-center whitespace-nowrap text-xs font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground h-8 rounded-full gap-1.5 px-3"
             >
               Z
             </button>
           </div>
         </div>
-      </header>
-      <div class="flex-1 flex overflow-hidden">
-        <div class="flex-1 p-6 overflow-y-auto">
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="list-product">
+      <div class="pos-main">
+        <div class="pos-products">
+          <div class="pos-grid" id="list-product">
               {% for product in products%}
-              <div data-id="{{product.id}}" data-stock="{{product.stock}}" data-name="{{product.name}}" data-price="{{product.unit_price}}" data-slot="card" class="product-card bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm cursor-pointer hover:shadow-md active:scale-95 transition-transform">
-                  <div data-slot="card-content" class="p-4 flex flex-col items-center text-center space-y-2">
-                      <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl product-photo">
-                          <img src="/media/{{product.image}} " >
+              <div data-id="{{product.id}}" data-stock="{{product.stock}}" data-stock-known="{{product.stock_known}}" data-name="{{product.name}}" data-price="{{product.unit_price}}" data-slot="card" class="product-card">
+                  <div data-slot="card-content" class="product-card-content">
+                      <div class="product-photo">
+                          <img src="/media/{{product.image}} " loading="lazy" alt="{{product.name}}">
                       </div>
-                      <div class="font-medium line-clamp-1">{{product.name}}</div>
-                      <div class="text-primary font-bold">{{product.unit_price}} KMF</div>
-                      <span data-slot="badge" class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden text-foreground [a&amp;]:hover:bg-accent [a&amp;]:hover:text-accent-foreground text-xs">
+                      <div class="product-name">{{product.name}}</div>
+                      <div class="product-price">{{product.unit_price}} KMF</div>
+                      <span data-slot="badge" class="product-stock {% if product.stock == 0 %}product-stock--zero{% endif %}">
                       Stock: {{product.stock}} 
                       </span>
                   </div>
               </div>
               {% endfor %}
           </div>
-
+          <div class="flex items-center justify-between px-2 py-4" id="pagination">
+              <div class="text-sm text-muted-foreground">
+              </div>
+              <div class="flex items-center space-x-2">
+                  <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left h-4 w-4">
+                          <path d="m11 17-5-5 5-5"></path>
+                          <path d="m18 17-5-5 5-5"></path>
+                      </svg>
+                  </button>
+                  <div class="text-sm font-medium page-number"></div>
+                  <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 has-[&gt;svg]:px-2.5 h-8 w-8 p-0" disabled="">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-right h-4 w-4">
+                      <path d="m6 17 5-5-5-5"></path>
+                      <path d="m13 17 5-5-5-5"></path>
+                  </svg>
+                  </button>
+              </div>
+          </div>
         </div>
-        <div class="w-96 bg-background border-l flex flex-col shadow-xl">
-          <div class="p-4 border-b bg-muted/10">
+        <div class="pos-cart">
+          <div class="pos-cart-header">
             <div class="flex items-center justify-between mb-4">
               <h2 class="font-semibold flex items-center gap-2">
                 <svg
@@ -275,37 +341,58 @@
                   ></path></svg
                 >Panier actuel
               </h2>
-              <button id="btn-clear" data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5 text-destructive">
-                Vider
-              </button>
-            </div>
-            <div id="fidelity-card-box" class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-              <div class="flex gap-2">
-                <input data-slot="input" id="scan-card" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive h-8 text-sm bg-white" placeholder="N° Carte Fidélité" value=""/>
-                <button data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5 h-8">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="lucide lucide-user h-3 w-3"
-                  >
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
+              <div class="flex items-center gap-4">
+                <button id="btn-clear" data-slot="button" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5 text-destructive">
+                  Vider
                 </button>
               </div>
             </div>
+            <div id="fidelity-card-box" class="pos-fidelity">
+              <div class="pos-fidelity-scan">
+                <div>
+                  <p class="pos-fidelity-title">Carte fidélité</p>
+                  <p class="pos-fidelity-sub">Cliquez pour scanner la carte</p>
+                </div>
+                <button id="open-scan-modal" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                  Scanner
+                </button>
+              </div>
+            </div>
+            <div id="voucher-box" class="pos-voucher hidden">
+              <div class="pos-voucher-header">
+                <div>
+                  <p class="pos-voucher-title">Bon de rendu monnaie</p>
+                  <p class="pos-voucher-code" data-role="voucher-code"></p>
+                </div>
+                <button type="button" id="voucher-remove" class="pos-voucher-remove">Retirer</button>
+              </div>
+              <div class="pos-voucher-meta">
+                <span data-role="voucher-expiry"></span>
+                <span class="pos-voucher-amount" data-role="voucher-amount"></span>
+              </div>
+            </div>
+            <div id="pyromane-active" class="pos-order hidden">
+              <div class="pos-order-header">
+                <div>
+                  <p class="pos-order-title">Commande Pyromane</p>
+                  <p class="pos-order-code" data-role="pyromane-order-number"></p>
+                </div>
+                <div class="pos-order-actions">
+                  <span class="pos-order-badge is-hidden" data-role="pyromane-modified">Modifié</span>
+                  <button type="button" id="pyromane-history" class="pos-voucher-remove">Historique</button>
+                  <button type="button" id="pyromane-remove" class="pos-voucher-remove pos-order-cancel">Annuler</button>
+                </div>
+              </div>
+              <div class="pos-order-meta">
+                <span data-role="pyromane-order-time"></span>
+                <span class="pos-order-amount" data-role="pyromane-order-amount"></span>
+              </div>
+            </div>
           </div>
-          <div class="flex-1 overflow-y-auto p-4 max-h-[calc(100vh)]">
+          <div class="pos-cart-body">
             <div class="space-y-4" id="list-item"></div>
           </div>
-          <div class="p-4 border-t bg-muted/10 space-y-4">
+          <div class="pos-cart-footer">
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-muted-foreground">Sous-total</span
@@ -323,7 +410,12 @@
       </div>
     </div>
     <div id="modalContainer"></div>
+    {{ products_json|json_script:"pos-products" }}
+    {{ remises_defaults|json_script:"pos-remises-defaults" }}
+    {{ remises_current|json_script:"pos-remises-current" }}
+    {{ pyromane_orders_json|json_script:"pyromane-orders" }}
+    {{ shift_json|json_script:"pos-shift" }}
     <script src="{% static 'js/app.js' %}"></script>
-    <script src="{% static 'js/noyau/pos/view_pos.js' %}"></script>
+    <script src="{% static 'js/noyau/pos/view_pos.js' %}?v=20260325-1"></script>
   </body>
 </html>

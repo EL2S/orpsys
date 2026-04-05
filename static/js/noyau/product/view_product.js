@@ -6,6 +6,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const addButton = document.getElementById('add-button');
     const modalContainer = document.getElementById('modalContainer');
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const productsJsonEl = document.getElementById('products_json');
+    let productsData = [];
+    if (productsJsonEl) {
+        const rawProducts = (productsJsonEl.textContent || "").trim();
+        productsData = JSON.parse(rawProducts || "[]");
+    }
+
+    function buildBaseOptions(excludeId = null) {
+        const options = productsData
+            .filter((p) => !excludeId || p.id !== excludeId)
+            .map((p) => `<option value="${p.id}">${p.name}</option>`)
+            .join("");
+        return `<option value="">Aucun</option>${options}`;
+    }
     searchInput.addEventListener('input', function () {
         const filter = this.value.toLowerCase().trim();
         for (let row of tableRows) {
@@ -54,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return firstCell ? firstCell.textContent.trim() : null;
         });
 
+        const baseOptions = buildBaseOptions();
         // HTML du modal
         modalContainer.innerHTML = `
     
@@ -103,7 +118,39 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                     />
                     </div>
-
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label
+                            data-slot="label"
+                            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                            for="base_product_id"
+                            >Produit base (optionnel)</label
+                            ><select
+                            id="base_product_id"
+                            name="base_product_id"
+                            class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                            ${baseOptions}
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                data-slot="label"
+                                class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                                for="conversion_factor"
+                                >Conversion (1 produit = X unités base)</label
+                            ><input
+                                data-slot="input"
+                                class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+                                id="conversion_factor"
+                                name="conversion_factor"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value="1"
+                            />
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
@@ -267,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (changeBtn) {
             const productId = changeBtn.getAttribute('data-id');
             fetch(`/product/${productId}/get/`)
-                .then(res => res.json())
+                .then(window.safeJson)
                 .then(data => {
                     if (data.success) {
                         changeProduct(data.product, productId);
@@ -363,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return firstCell ? firstCell.textContent.trim() : null;
         });
         itemsData = itemsData.filter(n => n.toLowerCase() !== product.name.toLowerCase());
+        const baseOptions = buildBaseOptions(productId);
         // HTML du modal
         modalContainer.innerHTML = `
     
@@ -384,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     data-slot="dialog-title"
                     class="text-lg leading-none font-semibold"
                     >
-                    Ajouter un produit
+                    Changer le produit
                     </h2>
                 </div>
                 <form class="grid gap-4 py-4" id="changeForm" method="POST" enctype="multipart/form-data">
@@ -445,6 +493,38 @@ document.addEventListener('DOMContentLoaded', function () {
                             <option value="Vente en dépôt" ${product.product_type === "Vente en dépôt" ? "selected" : ""}>Vente en dépôt</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label
+                            data-slot="label"
+                            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                            for="base_product_id"
+                            >Produit base (optionnel)</label
+                            ><select
+                            id="base_product_id"
+                            name="base_product_id"
+                            class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                            ${baseOptions}
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                data-slot="label"
+                                class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                                for="conversion_factor"
+                                >Conversion (1 produit = X unités base)</label
+                            ><input
+                                data-slot="input"
+                                class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+                                id="conversion_factor"
+                                name="conversion_factor"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value="${product.conversion_factor || 1}"
+                        />
+                    </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
@@ -518,6 +598,10 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         const modal = document.getElementById('changeModal');
         const closeModal = document.getElementById('closeModal');
+        const baseSelect = document.getElementById('base_product_id');
+        if (baseSelect) {
+            baseSelect.value = product.base_product_id || "";
+        }
         const form = document.getElementById('changeForm');
         const nameInput = document.getElementById('name');
         // Fermer le modal

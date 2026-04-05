@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Salimamoud ERP Système</title>
+        <link rel="icon" href="{% static 'img/logo/salimamoud.png' %}" />
+        <link href="{% static 'css/confirmation.css' %}" rel="stylesheet" />
+        <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="min-h-screen bg-secondary/30">
+            <header class="bg-background border-b border-border sticky top-0 z-10">
+                <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+                    <a href="{% url 'view_order' %}" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-6 w-6">
+                            <path d="m12 19-7-7 7-7"></path>
+                            <path d="M19 12H5"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-foreground">
+                        Caisse - Confirmation de Paiement
+                    </h1>
+                </div>
+            </header>
+            <main class="container mx-auto px-4 py-8 max-w-5xl">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <form id="confirmationForm" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" id="payment_method" name="payment_method" value="{{sale.payment_method}}">
+                        <input type="hidden" id="sale_id" value="{{sale_id}}">
+                        {% csrf_token %}
+                        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border shadow-sm p-6">
+                            <h2 class="text-xl font-bold mb-6 text-foreground">
+                                Informations Client
+                            </h2>
+                            <div class="mb-6 p-4 bg-secondary/30 rounded-lg">
+                                <p class="text-sm text-muted-foreground mb-1">Client</p>
+                                <p class="text-xl font-bold text-foreground">{{sale.client}}</p>
+                                <p class="text-sm text-muted-foreground">{{sale.order_number}}</p>
+                                <p class="text-sm text-muted-foreground">{{sale.phone}}</p>
+                            </div>
+                            <h3 class="font-semibold mb-4 text-foreground">
+                                Méthode de Paiement
+                            </h3>
+                            <div class="space-y-3 mb-6">
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors">
+                                    <div class="font-semibold text-foreground">Espèces</div>
+                                    <div class="text-sm text-muted-foreground">Paiement en liquide</div>
+                                </button>
+
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors">
+                                    <div class="font-semibold text-foreground">Mvola</div>
+                                    <div class="text-sm text-muted-foreground">Paiement mobile sécurisé via Mvola</div>
+                                </button>
+
+                                <button type="button" class="payment-btn w-full p-4 border-2 rounded-lg text-left transition-colors">
+                                    <div class="font-semibold text-foreground">Chèque</div>
+                                    <div class="text-sm text-muted-foreground">Paiement par chèque à l’ordre de notre établissement</div>
+                                </button>
+                            </div>
+
+                            <button
+                                type="submit"
+                                data-slot="button"
+                                class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full">
+                                Confirmer le Paiement
+                            </button>
+                        </div>
+                    </form>
+                    <div>
+                        <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border shadow-sm p-6 sticky top-24">
+                            <h2 class="text-xl font-bold mb-6 text-foreground">Récapitulatif</h2>
+                            <div class="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                                {% for item in sale.items %}
+                                    <div class="flex gap-3 pb-4 border-b border-border">
+                                        <div class="w-16 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
+                                            <img alt="{{item.name}}" class="w-full h-full object-cover" src="/media/{{item.image}}" />
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="font-semibold text-foreground truncate">{{item.name}}</h3>
+                                            <p class="text-sm text-muted-foreground">{{item.quantity}} × {{item.price}}KMF</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-bold text-foreground">{{total_amount}}KMF</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="space-y-2 pt-4 border-t border-border">
+                                <div class="flex justify-between text-muted-foreground">
+                                    <span>Articles ({{sale.item_count}})</span><span>{{sale.total_amount}}KMF</span>
+                                </div>
+                                <div class="flex justify-between text-xl font-bold">
+                                    <span class="text-foreground">Total</span><span class="text-primary">{{sale.total_amount}}KMF</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <div id="modalContainer"></div>
+        <script src="{% static 'js/app.js' %}"></script>
+        <script src="{% static 'js/noyau/pos/confirmation.js' %}"></script>
+    </body>
+</html>
