@@ -18,12 +18,20 @@ class Pos(models.Model):
     pass
 
 class Loyalty(models.Model):
+    CARD_TYPE_STANDARD = "STANDARD"
+    CARD_TYPE_PREMIUM = "PREMIUM"
+    CARD_TYPE_CHOICES = [
+        (CARD_TYPE_STANDARD, "Standard"),
+        (CARD_TYPE_PREMIUM, "Premium"),
+    ]
+
     client = models.CharField(max_length=255)
     phone = models.CharField(max_length=255,default="")
     date = models.DateField()
     solde = models.DecimalField(max_digits=10, decimal_places=2)
     card_id = models.CharField(max_length=50, unique=True)
     setting = models.CharField(max_length=50, default="Salimamoud")
+    card_type = models.CharField(max_length=20, choices=CARD_TYPE_CHOICES, default=CARD_TYPE_STANDARD)
     points_balance = models.PositiveIntegerField(default=0)
     points_remainder = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     

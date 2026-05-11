@@ -64,6 +64,38 @@ document.addEventListener('DOMContentLoaded', function () {
         inventoriesData.map((item) => [String(item.id), item])
     );
 
+    function normalizeDecimalFieldValue(value) {
+        return String(value ?? "")
+            .trim()
+            .replace(/\s+/g, "")
+            .replace(",", ".");
+    }
+
+    function parseFlexibleDecimalValue(value) {
+        const normalized = normalizeDecimalFieldValue(value);
+        if (!normalized) return 0;
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function validateDecimalField(input, message) {
+        if (!input) return true;
+        const rawValue = String(input.value || "").trim();
+        if (!rawValue) {
+            input.setCustomValidity("");
+            return true;
+        }
+        const parsed = parseFlexibleDecimalValue(rawValue);
+        if (Number.isNaN(parsed)) {
+            input.setCustomValidity(message);
+            input.reportValidity();
+            return false;
+        }
+        input.value = normalizeDecimalFieldValue(rawValue);
+        input.setCustomValidity("");
+        return true;
+    }
+
 
     const REPORT_BRAND = {
         companyName: "SALIMAMOUD",
@@ -815,7 +847,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 id="current_stock"
                                 name="current_stock"
                                 required=""
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                placeholder="Ex: 5 ou 5,5"
                             />
                         </div>
                         <div class="space-y-2">
@@ -830,7 +864,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 id="min_stock"
                                 name="min_stock"
                                 required=""
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
+                                placeholder="Ex: 2 ou 2,5"
                             />
                         </div>
                     </div>
@@ -895,6 +931,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const linkedProductSelect = document.getElementById('linked_product');
         const stockModeSelect = document.getElementById('stock_mode');
         const currentStockInput = document.getElementById('current_stock');
+        const minStockInput = document.getElementById('min_stock');
         const expiryField = document.getElementById('initial-expiry-field');
         const expiryInput = document.getElementById('initial_expiry');
         // Fermer le modal
@@ -905,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function refreshExpiryField() {
             if (!stockModeSelect || !currentStockInput || !expiryField || !expiryInput) return;
             const isFefo = stockModeSelect.value === "FEFO";
-            const hasStock = Number(currentStockInput.value || 0) > 0;
+            const hasStock = parseFlexibleDecimalValue(currentStockInput.value || 0) > 0;
             if (isFefo) {
                 expiryField.classList.remove("hidden");
                 expiryInput.required = hasStock;
@@ -921,6 +958,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (currentStockInput) {
             currentStockInput.addEventListener("input", refreshExpiryField);
+            currentStockInput.addEventListener("blur", () => {
+                validateDecimalField(currentStockInput, "Entrez un nombre valide, par exemple 5 ou 5,5.");
+                refreshExpiryField();
+            });
+        }
+        if (minStockInput) {
+            minStockInput.addEventListener("blur", () => {
+                validateDecimalField(minStockInput, "Entrez un nombre valide, par exemple 2 ou 2,5.");
+            });
         }
         refreshExpiryField();
 
@@ -948,6 +994,11 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault(); // Empêche l'envoi immédiat
             clearNameError();
+            const stockOk = validateDecimalField(currentStockInput, "Entrez un nombre valide pour le stock initial.");
+            const minOk = validateDecimalField(minStockInput, "Entrez un nombre valide pour le stock minimum.");
+            if (!stockOk || !minOk) {
+                return;
+            }
             const enteredName = nameInput.value.trim().toLowerCase();
             // Suppression des anciens messages d’erreur
             form.querySelectorAll('.error-msg').forEach(el => el.remove());
@@ -1184,11 +1235,26 @@ document.addEventListener('DOMContentLoaded', function () {
                                 id="min_stock"
                                 name="min_stock"
                                 required=""
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
                                 value="${inventory.min_stock}"
                             />
                         </div>
                     </div>
+                    ${String(inventory.stock_mode || "").toUpperCase() === "FEFO" ? `
+                        <div class="rounded-lg border p-3 space-y-3 bg-muted/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold">Lots FEFO</p>
+                                    <p class="text-xs text-muted-foreground">Modifiez les dates d’expiration si besoin.</p>
+                                </div>
+                                <button type="button" id="save-fefo-lots" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3">
+                                    Enregistrer dates
+                                </button>
+                            </div>
+                            <div id="fefo-lots-body" class="text-sm text-muted-foreground">Chargement...</div>
+                        </div>
+                    ` : ""}
                     <div
                     data-slot="dialog-footer"
                     class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"
@@ -1232,6 +1298,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('changeForm');
         const nameInput = document.getElementById('name');
         const linkedProductSelect = document.getElementById('linked_product');
+        const minStockInput = document.getElementById('min_stock');
+        const fefoLotsBody = document.getElementById("fefo-lots-body");
+        const saveFefoLotsBtn = document.getElementById("save-fefo-lots");
         // Fermer le modal
         closeModal.addEventListener('click', () => {
             modalContainer.innerHTML = '';
@@ -1243,6 +1312,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (oldError) oldError.remove();
         }
         nameInput.addEventListener("input", clearNameError);
+        if (minStockInput) {
+            minStockInput.addEventListener("blur", () => {
+                validateDecimalField(minStockInput, "Entrez un nombre valide, par exemple 2 ou 2,5.");
+            });
+        }
 
         if (linkedProductSelect) {
             linkedProductSelect.addEventListener("change", () => {
@@ -1257,6 +1331,10 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault(); // Empêche l'envoi immédiat
             clearNameError();
+            const minOk = validateDecimalField(minStockInput, "Entrez un nombre valide pour le stock minimum.");
+            if (!minOk) {
+                return;
+            }
             const enteredName = nameInput.value.trim().toLowerCase();
             // Suppression des anciens messages d’erreur
             form.querySelectorAll('.error-msg').forEach(el => el.remove());
@@ -1279,6 +1357,76 @@ document.addEventListener('DOMContentLoaded', function () {
             // Envoyer le formulaire
             form.submit();
         });
+
+        if (fefoLotsBody) {
+            fetch(`/inventory/${inventoryId}/lots/`)
+                .then(window.safeJson)
+                .then((data) => {
+                    if (!data || !data.success) {
+                        fefoLotsBody.textContent = "Aucun lot disponible.";
+                        return;
+                    }
+                    if (!data.lots || !data.lots.length) {
+                        fefoLotsBody.innerHTML = "<div class='py-2 text-muted-foreground'>Aucun lot enregistré.</div>";
+                        return;
+                    }
+                    const rows = data.lots.map((lot) => {
+                        const exp = lot.expiration_date ? lot.expiration_date.slice(0, 10) : "";
+                        return `
+                            <div class="grid grid-cols-4 gap-2 items-center py-1 border-b border-border/60">
+                                <div class="text-xs text-muted-foreground">Lot #${lot.id}</div>
+                                <input type="date" data-lot-id="${lot.id}" value="${exp}" class="border-input h-8 rounded-md border bg-transparent px-2 text-xs" />
+                                <div class="text-xs">${lot.quantity} ${data.unit || ""}</div>
+                                <div class="text-xs text-muted-foreground">${formatDateShort(lot.received_at)}</div>
+                            </div>
+                        `;
+                    }).join("");
+                    fefoLotsBody.innerHTML = `
+                        <div class="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-wide text-muted-foreground pb-1">
+                            <span>Lot</span><span>Expiration</span><span>Quantité</span><span>Reçu</span>
+                        </div>
+                        ${rows}
+                    `;
+                })
+                .catch(() => {
+                    fefoLotsBody.textContent = "Impossible de charger les lots.";
+                });
+        }
+
+        if (saveFefoLotsBtn) {
+            saveFefoLotsBtn.addEventListener("click", async () => {
+                const inputs = modalContainer.querySelectorAll("[data-lot-id]");
+                const lotsPayload = Array.from(inputs).map((input) => ({
+                    id: input.getAttribute("data-lot-id"),
+                    expiration_date: input.value || null,
+                }));
+                try {
+                    const res = await fetch(`/inventory/${inventoryId}/lots/update/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken.value,
+                        },
+                        body: JSON.stringify({ lots: lotsPayload }),
+                    });
+                    const data = await window.safeJson(res);
+                    if (!data || !data.success) {
+                        throw new Error((data && data.error) || "Impossible de sauvegarder.");
+                    }
+                    openInfoModal({
+                        title: "Lots mis à jour",
+                        message: "Les dates d’expiration ont été enregistrées.",
+                        tone: "success",
+                    });
+                } catch (error) {
+                    openInfoModal({
+                        title: "Erreur",
+                        message: error.message || "Impossible de sauvegarder les lots.",
+                        tone: "error",
+                    });
+                }
+            });
+        }
     }
     function stockInventory(type) {
         let title = type === "in" ? "Entrée de stock" : "Sortie de stock";

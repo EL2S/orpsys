@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const todayBtn = document.getElementById("today-button");
     const allBtn = document.getElementById("all-button");
+    const shiftBtn = document.getElementById("shift-button");
     const modalContainer = document.getElementById('modalContainer');
     const transactionsTable = document.getElementById('transactionTable');
     const transactionsBody = transactionsTable.querySelector('tbody');
@@ -15,6 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const startSaleInput = document.getElementById("start-date-sale");
     const endSaleInput = document.getElementById("end-date-sale");
     const shiftReportButton = document.getElementById("btn-shift-report");
+    const shiftTable = document.getElementById('shiftTable');
+    const shiftBody = shiftTable ? shiftTable.querySelector('tbody') : null;
+    const shiftRowsNode = shiftTable ? shiftTable.querySelectorAll("tbody tr") : [];
+    const shiftCashiersEl = document.getElementById("shift-cashiers-json");
+    const shiftCashiers = shiftCashiersEl ? JSON.parse(shiftCashiersEl.textContent || "[]") : [];
+    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]");
 
     const REPORT_BRAND = {
         companyName: "SALIMAMOUD",
@@ -34,6 +41,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (shiftCode === "SOIR") return "Soir";
         if (shiftCode === "MATIN") return "Matin";
         return "Tous";
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 
     async function imageUrlToDataUrl(url) {
@@ -705,37 +721,33 @@ document.addEventListener('DOMContentLoaded', function () {
     // Les panneaux
     const todayPanel = document.querySelector('[role="tabpanel"][aria-labelledby="today-button"]');
     const allPanel = document.querySelector('[role="tabpanel"][aria-labelledby="all-button"]');
+    const shiftPanel = document.querySelector('[role="tabpanel"][aria-labelledby="shift-button"]');
+    const tabs = [
+        { button: todayBtn, panel: todayPanel },
+        { button: allBtn, panel: allPanel },
+        { button: shiftBtn, panel: shiftPanel },
+    ].filter((tab) => tab.button && tab.panel);
 
-    function activateTab(selectedBtn, selectedPanel, otherBtn, otherPanel) {
-
-        // Activer le bouton sélectionné
-        selectedBtn.dataset.state = "active";
-        selectedBtn.setAttribute("aria-selected", "true");
-        selectedBtn.tabIndex = 0;
-
-        // Désactiver l'autre bouton
-        otherBtn.dataset.state = "inactive";
-        otherBtn.setAttribute("aria-selected", "false");
-        otherBtn.tabIndex = -1;
-
-        // Afficher le panneau sélectionné
-        selectedPanel.dataset.state = "active";
-        selectedPanel.hidden = false;
-
-        // Masquer l'autre panneau
-        otherPanel.dataset.state = "inactive";
-        otherPanel.hidden = true;
+    function activateTab(selectedBtn, selectedPanel) {
+        tabs.forEach(({ button, panel }) => {
+            const isSelected = button === selectedBtn && panel === selectedPanel;
+            button.dataset.state = isSelected ? "active" : "inactive";
+            button.setAttribute("aria-selected", isSelected ? "true" : "false");
+            button.tabIndex = isSelected ? 0 : -1;
+            panel.dataset.state = isSelected ? "active" : "inactive";
+            panel.hidden = !isSelected;
+        });
     }
 
-    // Quand on clique sur Aujourd’hui
-    todayBtn.addEventListener("click", () => {
-        activateTab(todayBtn, todayPanel, allBtn, allPanel);
-    });
-
-    // Quand on clique sur Hier
-    allBtn.addEventListener("click", () => {
-        activateTab(allBtn, allPanel, todayBtn, todayPanel);
-    });
+    if (todayBtn && todayPanel) {
+        todayBtn.addEventListener("click", () => activateTab(todayBtn, todayPanel));
+    }
+    if (allBtn && allPanel) {
+        allBtn.addEventListener("click", () => activateTab(allBtn, allPanel));
+    }
+    if (shiftBtn && shiftPanel) {
+        shiftBtn.addEventListener("click", () => activateTab(shiftBtn, shiftPanel));
+    }
 
 
     let allSaleRows = Array.from(document.querySelectorAll("#saleTable tbody tr"));
@@ -865,6 +877,59 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     renderTableTransaction();
+
+    let allShiftRows = Array.from(shiftRowsNode);
+    let shiftRows = allShiftRows.filter(row => !row.textContent.includes("Aucun shift trouvé."));
+    let currentShiftPage = 1;
+
+    const paginationInfoShift = document.querySelector("#shiftPagination .text-muted-foreground");
+    const pageNumberLabelShift = document.querySelector("#shiftPagination .page-number");
+    const prevBtnShift = document.querySelector('#shiftPagination button:first-child');
+    const nextBtnShift = document.querySelector('#shiftPagination button:last-child');
+
+    function renderShiftTable() {
+        if (!shiftBody || !paginationInfoShift || !pageNumberLabelShift || !prevBtnShift || !nextBtnShift) {
+            return;
+        }
+        const totalRows = shiftRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        allShiftRows.forEach(row => row.style.display = "none");
+
+        if (totalRows === 0) {
+            const noDataRow = allShiftRows.find(row => row.textContent.includes("Aucun shift trouvé."));
+            if (noDataRow) noDataRow.style.display = "";
+            paginationInfoShift.textContent = "Affichage de 0 à 0 sur 0 résultats";
+            pageNumberLabelShift.textContent = "Page 1 sur 1";
+            prevBtnShift.disabled = true;
+            nextBtnShift.disabled = true;
+            return;
+        }
+
+        const start = (currentShiftPage - 1) * rowsPerPage;
+        const end = Math.min(start + rowsPerPage, totalRows);
+        for (let i = start; i < end; i++) {
+            shiftRows[i].style.display = "";
+        }
+
+        paginationInfoShift.textContent = `Affichage de ${start + 1} à ${end} sur ${totalRows} résultats`;
+        pageNumberLabelShift.textContent = `Page ${currentShiftPage} sur ${totalPages}`;
+        prevBtnShift.disabled = currentShiftPage === 1;
+        nextBtnShift.disabled = currentShiftPage === totalPages;
+    }
+
+    if (prevBtnShift && nextBtnShift) {
+        prevBtnShift.addEventListener("click", () => {
+            currentShiftPage--;
+            renderShiftTable();
+        });
+        nextBtnShift.addEventListener("click", () => {
+            currentShiftPage++;
+            renderShiftTable();
+        });
+    }
+
+    renderShiftTable();
 
     salesBody.addEventListener('click', function (event) {
         const viewBtn = event.target.closest('.view-button');
@@ -1014,6 +1079,155 @@ document.addEventListener('DOMContentLoaded', function () {
             modalContainer.innerHTML = '';
         });
 
+    }
+
+    async function loadShiftReport(reportId) {
+        const response = await fetch(`/pos/shift/${reportId}/get/`);
+        const data = await window.safeJson(response);
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Impossible de charger le shift.");
+        }
+        return data.report;
+    }
+
+    function openShiftEditModal(report) {
+        const cashierOptions = [`<option value="">Aucune caissière</option>`].concat(
+            shiftCashiers.map((cashier) => {
+                const selected = String(cashier.id) === String(report.cashier_id || "") ? "selected" : "";
+                return `<option value="${cashier.id}" ${selected}>${escapeHtml(cashier.name)}</option>`;
+            })
+        ).join("");
+
+        modalContainer.innerHTML = `
+            <div role="dialog" data-state="open" data-slot="dialog-content" class="modal-custom bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border p-6 shadow-lg duration-200 sm:max-w-[560px]" tabindex="-1" style="pointer-events: auto">
+                <div class="space-y-2">
+                    <h2 class="text-lg font-semibold">Modifier le shift caisse</h2>
+                    <p class="text-sm text-muted-foreground">Ajustez seulement le rapport de shift. Les lignes liées restent attachées à ce rapport.</p>
+                </div>
+                <form id="shiftManageForm" class="grid gap-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Date</label>
+                            <input type="date" name="shift_date" value="${escapeHtml(report.shift_date)}" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none" required />
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Shift</label>
+                            <select name="shift" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none">
+                                <option value="MATIN" ${report.shift === "MATIN" ? "selected" : ""}>Matin</option>
+                                <option value="SOIR" ${report.shift === "SOIR" ? "selected" : ""}>Soir</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">Caissière</label>
+                        <select name="cashier_id" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none">
+                            ${cashierOptions}
+                        </select>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Ouvert à</label>
+                            <input type="datetime-local" name="opened_at" value="${escapeHtml(report.opened_at)}" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none" required />
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Clôturé à</label>
+                            <input type="datetime-local" name="closed_at" value="${escapeHtml(report.closed_at)}" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none" />
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">Note</label>
+                        <input type="text" name="note" value="${escapeHtml(report.note || "")}" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none" />
+                    </div>
+                    <p id="shiftManageError" class="text-sm text-red-600 hidden"></p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" id="shiftManageCancel" class="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm hover:bg-accent">Annuler</button>
+                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        const cancelBtn = document.getElementById("shiftManageCancel");
+        const form = document.getElementById("shiftManageForm");
+        const errorEl = document.getElementById("shiftManageError");
+
+        cancelBtn.addEventListener("click", () => {
+            modalContainer.innerHTML = "";
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            errorEl.classList.add("hidden");
+            const formData = new FormData(form);
+            const payload = {
+                shift_date: formData.get("shift_date"),
+                shift: formData.get("shift"),
+                cashier_id: formData.get("cashier_id"),
+                opened_at: formData.get("opened_at"),
+                closed_at: formData.get("closed_at"),
+                note: formData.get("note"),
+            };
+
+            const response = await fetch(`/pos/shift/${report.id}/update/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken ? csrfToken.value : "",
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await window.safeJson(response);
+            if (!response.ok || !data.success) {
+                errorEl.textContent = data.error || "Impossible d'enregistrer les modifications.";
+                errorEl.classList.remove("hidden");
+                return;
+            }
+
+            window.location.reload();
+        });
+    }
+
+    if (shiftBody) {
+        shiftBody.addEventListener("click", async (event) => {
+            const editBtn = event.target.closest(".shift-edit-button");
+            if (editBtn) {
+                const reportId = editBtn.getAttribute("data-id");
+                try {
+                    const report = await loadShiftReport(reportId);
+                    openShiftEditModal(report);
+                } catch (error) {
+                    alert(error.message || "Impossible de charger le shift.");
+                }
+                return;
+            }
+
+            const deleteBtn = event.target.closest(".shift-delete-button");
+            if (deleteBtn) {
+                const reportId = deleteBtn.getAttribute("data-id");
+                try {
+                    const report = await loadShiftReport(reportId);
+                    const linkedText = `Remises ${report.remises_count} · Abîmés ${report.abimes_count} · Consommations ${report.consumptions_count} · Dépenses ${report.expenses_count}`;
+                    const confirmed = window.confirm(`Supprimer le shift ${report.shift_date_label} ${report.shift} ?\n${linkedText}\nCette suppression efface aussi les lignes liées.`);
+                    if (!confirmed) return;
+
+                    const response = await fetch(`/pos/shift/${reportId}/delete/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken ? csrfToken.value : "",
+                        },
+                        body: JSON.stringify({}),
+                    });
+                    const data = await window.safeJson(response);
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || "Impossible de supprimer le shift.");
+                    }
+                    window.location.reload();
+                } catch (error) {
+                    alert(error.message || "Impossible de supprimer le shift.");
+                }
+            }
+        });
     }
 
     if (shiftReportButton) {

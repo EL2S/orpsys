@@ -15,29 +15,46 @@
     {% csrf_token %}
     <div class="pos-shell">
       <header class="pos-topbar">
-        <div class="pos-title">
-          <div>
-            <h1 class="pos-heading">Caisse Enregistreuse</h1>
-            <p class="pos-subheading">Interface tactile rapide et claire</p>
+        <div class="pos-session">
+          <div class="pos-title">
+            <div>
+              <h1 class="pos-heading">Caisse Enregistreuse</h1>
+              <p class="pos-subheading">Vente rapide, claire et tactile</p>
+            </div>
+          </div>
+          <div class="pos-session-status">
+            <span class="pos-session-eyebrow">Session caisse</span>
+            <p id="pos-shift-summary" class="pos-session-summary">Chargement du shift...</p>
           </div>
         </div>
         <div class="pos-actions">
-          <button id="btn-abimes" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Abîmés
-          </button>
-          <button id="btn-remises" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Remises
-          </button>
-          <button id="btn-consumptions" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Consommations
-          </button>
-          <button id="btn-expenses" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Dépenses
-          </button>
-          <button id="btn-pyromane" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Pyromane
-            <span class="pos-action-badge is-hidden" data-role="pyromane-count">0</span>
-          </button>
+          <details class="pos-menu">
+            <summary class="pos-action-button pos-menu-trigger inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Opérations
+            </summary>
+            <div class="pos-menu-panel">
+              <button id="btn-remises" data-slot="button" class="pos-menu-item">
+                Remises
+              </button>
+              <button id="btn-abimes" data-slot="button" class="pos-menu-item">
+                Abîmés
+              </button>
+              <button id="btn-consumptions" data-slot="button" class="pos-menu-item">
+                Consommations
+              </button>
+              <button id="btn-expenses" data-slot="button" class="pos-menu-item">
+                Dépenses
+              </button>
+            </div>
+          </details>
+          <div class="pos-shift-tools">
+            <button id="btn-shift-change" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Changer
+            </button>
+            <button id="btn-shift-close" data-slot="button" class="pos-action-button pos-action-button--close inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Clôturer
+            </button>
+          </div>
           <a href="{% url 'view_order' %}" id="btn-mini-four" data-slot="button" class="pos-action-button inline-flex items-center justify-center whitespace-nowrap text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-green-600">
             Mini-Four
             <span class="pos-action-badge is-hidden" data-role="mini-four-count">0</span>
@@ -72,22 +89,27 @@
             class="pos-search-input"
           />
         </div>
-        <div class="pos-resale-bundle">
-          <button id="btn-resale-stock" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Entrée Vente en dépôt
-          </button>
-          <div class="pos-resale-total">
-            <span class="pos-resale-label">Vente en dépôt</span>
-            <span id="resale-total" class="pos-resale-value">{{ resale_total|floatformat:0 }} KMF</span>
+        <details class="pos-menu pos-menu--entries">
+          <summary class="pos-action-button pos-menu-trigger inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Entrées comptoir
+          </summary>
+          <div class="pos-menu-panel pos-menu-panel--wide">
+            <button id="btn-resale-stock" data-slot="button" class="pos-menu-item">
+              Vente en dépôt
+            </button>
+            <button id="btn-ar-stock" data-slot="button" class="pos-menu-item">
+              Achat &amp; Revente
+            </button>
           </div>
-        </div>
-        <div class="pos-resale-bundle">
-          <button id="btn-ar-stock" data-slot="button" class="pos-action-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            Entrée Achat &amp; Revente
-          </button>
-          <div class="pos-resale-total">
-            <span class="pos-resale-label">Achat &amp; Revente</span>
-            <span id="ar-total" class="pos-resale-value">{{ ar_total|floatformat:0 }} KMF</span>
+        </details>
+        <div class="pos-kpi-strip">
+          <div class="pos-kpi-chip">
+            <span class="pos-kpi-label">VD</span>
+            <span id="resale-total" class="pos-kpi-value">{{ resale_total|floatformat:0 }} KMF</span>
+          </div>
+          <div class="pos-kpi-chip">
+            <span class="pos-kpi-label">A&amp;R</span>
+            <span id="ar-total" class="pos-kpi-value">{{ ar_total|floatformat:0 }} KMF</span>
           </div>
         </div>
         <div class="filter-items pos-filter-items">
@@ -291,7 +313,7 @@
                       </div>
                       <div class="product-name">{{product.name}}</div>
                       <div class="product-price">{{product.unit_price}} KMF</div>
-                      <span data-slot="badge" class="product-stock {% if product.stock == 0 %}product-stock--zero{% endif %}">
+                      <span data-slot="badge" class="product-stock {% if product.stock == 0 %}product-stock--zero{% elif product.stock == '∞' %}product-stock--infinite{% endif %}">
                       Stock: {{product.stock}} 
                       </span>
                   </div>
@@ -371,23 +393,6 @@
                 <span class="pos-voucher-amount" data-role="voucher-amount"></span>
               </div>
             </div>
-            <div id="pyromane-active" class="pos-order hidden">
-              <div class="pos-order-header">
-                <div>
-                  <p class="pos-order-title">Commande Pyromane</p>
-                  <p class="pos-order-code" data-role="pyromane-order-number"></p>
-                </div>
-                <div class="pos-order-actions">
-                  <span class="pos-order-badge is-hidden" data-role="pyromane-modified">Modifié</span>
-                  <button type="button" id="pyromane-history" class="pos-voucher-remove">Historique</button>
-                  <button type="button" id="pyromane-remove" class="pos-voucher-remove pos-order-cancel">Annuler</button>
-                </div>
-              </div>
-              <div class="pos-order-meta">
-                <span data-role="pyromane-order-time"></span>
-                <span class="pos-order-amount" data-role="pyromane-order-amount"></span>
-              </div>
-            </div>
           </div>
           <div class="pos-cart-body">
             <div class="space-y-4" id="list-item"></div>
@@ -413,7 +418,6 @@
     {{ products_json|json_script:"pos-products" }}
     {{ remises_defaults|json_script:"pos-remises-defaults" }}
     {{ remises_current|json_script:"pos-remises-current" }}
-    {{ pyromane_orders_json|json_script:"pyromane-orders" }}
     {{ shift_json|json_script:"pos-shift" }}
     <script src="{% static 'js/app.js' %}"></script>
     <script src="{% static 'js/noyau/pos/view_pos.js' %}?v=20260325-1"></script>

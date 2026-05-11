@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block script %}pos/view_shift_reports.js{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6 space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-2">
+            <a
+                href="{% url 'view_pos' %}"
+                data-slot="button"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground size-9"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold">Shifts caisse</h1>
+                <p class="text-muted-foreground text-sm">Corrigez un shift erroné, changez la caissière, la note ou supprimez un rapport incorrect.</p>
+            </div>
+        </div>
+        {% csrf_token %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Total shifts</p>
+            <p class="text-2xl font-bold">{{ shift_summary.total }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Tous les rapports enregistrés</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Shifts ouverts</p>
+            <p class="text-2xl font-bold">{{ shift_summary.open }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Encore non clôturés</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Shifts clôturés</p>
+            <p class="text-2xl font-bold">{{ shift_summary.closed }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Clôturés proprement</p>
+        </div>
+        <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+            <p class="text-sm text-muted-foreground">Aujourd'hui</p>
+            <p class="text-2xl font-bold">{{ shift_summary.today }}</p>
+            <p class="text-xs text-muted-foreground mt-1">Rapports datés du jour</p>
+        </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground rounded-xl border p-4 shadow-sm">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div>
+                <label for="shiftDateFilter" class="mb-1 block text-sm font-medium text-foreground">Date</label>
+                <input id="shiftDateFilter" type="date" class="file:text-foreground placeholder:text-muted-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none" />
+            </div>
+            <div>
+                <label for="shiftFilter" class="mb-1 block text-sm font-medium text-foreground">Shift</label>
+                <select id="shiftFilter" class="file:text-foreground placeholder:text-muted-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none">
+                    <option value="">Tous</option>
+                    <option value="MATIN">Matin</option>
+                    <option value="SOIR">Soir</option>
+                </select>
+            </div>
+            <div>
+                <label for="shiftCashierFilter" class="mb-1 block text-sm font-medium text-foreground">Caissière</label>
+                <select id="shiftCashierFilter" class="file:text-foreground placeholder:text-muted-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none">
+                    <option value="">Toutes</option>
+                    {% for cashier in shift_cashiers %}
+                        <option value="{{ cashier.id }}">{{ cashier.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="shiftStatusFilter" class="mb-1 block text-sm font-medium text-foreground">Statut</label>
+                <select id="shiftStatusFilter" class="file:text-foreground placeholder:text-muted-foreground border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none">
+                    <option value="">Tous</option>
+                    <option value="OPEN">Ouvert</option>
+                    <option value="CLOSED">Clôturé</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+        <div data-slot="card-header" class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6">
+            <div data-slot="card-title" class="leading-none font-semibold">Liste des rapports de shift</div>
+            <div data-slot="card-description" class="text-muted-foreground text-sm">Chaque ligne représente le rapport d'une caissière sur un créneau donné.</div>
+        </div>
+        <div data-slot="card-content" class="px-6">
+            <div data-slot="table-container" class="relative w-full overflow-x-auto">
+                <table data-slot="table" class="w-full caption-bottom text-sm" id="shiftTable">
+                    <thead data-slot="table-header" class="[&_tr]:border-b">
+                        <tr data-slot="table-row" class="border-b transition-colors">
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Date</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Shift</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Caissière</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Ouvert</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Clôturé</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Statut</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Liaisons</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">Note</th>
+                            <th data-slot="table-head" class="text-foreground h-10 px-2 align-middle font-medium whitespace-nowrap text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
+                        {% for report in shift_reports %}
+                        <tr
+                            data-slot="table-row"
+                            class="hover:bg-muted/50 border-b transition-colors"
+                            data-report-id="{{ report.id }}"
+                            data-date="{{ report.shift_date }}"
+                            data-shift="{{ report.shift }}"
+                            data-cashier="{{ report.cashier_id|default:'' }}"
+                            data-status="{% if report.is_closed %}CLOSED{% else %}OPEN{% endif %}"
+                        >
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ report.shift_date_label }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ report.shift }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ report.cashier_name|default:"—" }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ report.opened_at_label }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">{{ report.closed_at_label }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {% if report.is_closed %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+                                    {{ report.status_label }}
+                                </span>
+                            </td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-xs text-muted-foreground">R {{ report.remises_count }} · A {{ report.abimes_count }} · C {{ report.consumptions_count }} · D {{ report.expenses_count }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle max-w-64 truncate" title="{{ report.note }}">{{ report.note|default:"—" }}</td>
+                            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap text-right">
+                                <div class="flex justify-end gap-1">
+                                    {% if can_change_shift_reports %}
+                                    <button data-id="{{ report.id }}" data-slot="button" class="shift-edit-button inline-flex h-8 w-8 items-center justify-center rounded-md border bg-transparent text-blue-600 shadow-xs transition-all hover:bg-blue-50 hover:text-blue-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.37 2.63a2.12 2.12 0 1 1 3 3L12 15l-4 1 1-4Z"></path>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                    {% if can_delete_shift_reports %}
+                                    <button data-id="{{ report.id }}" data-slot="button" class="shift-delete-button inline-flex h-8 w-8 items-center justify-center rounded-md border bg-transparent text-red-600 shadow-xs transition-all hover:bg-red-50 hover:text-red-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                            <path d="M3 6h18"></path>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                    {% if not can_change_shift_reports and not can_delete_shift_reports %}
+                                    <span class="text-xs text-muted-foreground">Lecture seule</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="shift-no-data-row{% if shift_reports %} hidden{% endif %}">
+                            <td colspan="9" class="py-4 text-center">Aucun shift trouvé.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between px-2 py-4" id="shiftPagination">
+                <div class="text-sm text-muted-foreground"></div>
+                <div class="flex items-center space-x-2">
+                    <button data-slot="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border bg-background p-0 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="m11 17-5-5 5-5"></path>
+                            <path d="m18 17-5-5 5-5"></path>
+                        </svg>
+                    </button>
+                    <div class="page-number text-sm font-medium"></div>
+                    <button data-slot="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border bg-background p-0 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="m6 17 5-5-5-5"></path>
+                            <path d="m13 17 5-5-5-5"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalContainer"></div>
+{{ shift_cashiers|json_script:"shift-cashiers-json" }}
+{% endblock %}

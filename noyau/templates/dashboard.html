@@ -72,24 +72,6 @@
       </a>
     {% endif %}
 
-    {% if 'noyau.view_pyromaneorder' in user.get_all_permissions %}
-      <a href="{% url 'view_pyromane' %}" class="module-card">
-        <div class="module-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3h8l1 4H7z"></path>
-            <path d="M5 7h14v6H5z"></path>
-            <path d="M6 13h12v7H6z"></path>
-            <path d="M9 16h6"></path>
-          </svg>
-        </div>
-        <div>
-          <div class="module-title">Pyromane Grill</div>
-          <div class="module-subtitle">Commandes a produire</div>
-        </div>
-        <div class="module-link">Accéder au module →</div>
-      </a>
-    {% endif %}
-
     {% if 'noyau.view_rawmaterial' in user.get_all_permissions %}
       <a href="{% url 'view_rawmaterial' %}" class="module-card">
         <div class="module-icon">

@@ -15,8 +15,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import timezone
 import random
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q, F, Sum, Count, Avg, Max, Min
-from django.db.models.functions import TruncHour, TruncDate
+from django.db.models import Q, F, Sum, Count, Avg, Max, Min, IntegerField
+from django.db.models.functions import TruncHour, TruncDate, Substr, Cast
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
@@ -154,6 +154,215 @@ def get_report_window(report, shift_date, shift):
         end_dt = report.closed_at or timezone.now()
         return start_dt, end_dt
     return get_shift_window(shift_date, shift)
+
+
+def get_pos_shift_remise_defaults(shift_date, shift):
+    shift = (shift or "").upper()
+    if shift not in {"MATIN", "SOIR"}:
+        return {}
+
+    prev_shift = "SOIR" if shift == "MATIN" else "MATIN"
+    prev_date = shift_date - timedelta(days=1) if shift == "MATIN" else shift_date
+    prev_report = (
+        PosShiftReport.objects.filter(shift_date=prev_date, shift=prev_shift)
+        .order_by("-opened_at")
+        .first()
+    )
+    if not prev_report:
+        return {}
+
+    base_with_children_ids = set(
+        SaleProduct.objects.exclude(base_product_id=None).values_list("base_product_id", flat=True)
+    )
+    resale_ar_ids = set(
+        SaleProduct.objects.filter(product_type__in={"Vente en dépôt", "Achat & Revente"}).values_list("id", flat=True)
+    )
+    durable_ids = set(
+        SaleProduct.objects.filter(stock_known=True, category__iexact="Durable").values_list("id", flat=True)
+    )
+
+    defaults = {}
+    try:
+        prev_payload = build_pos_shift_report_payload(prev_report, prev_date, prev_shift)
+        for row in prev_payload.get("ready_rows", []):
+            product_id = row.get("id")
+            if (
+                product_id in base_with_children_ids
+                or product_id in resale_ar_ids
+                or (shift == "MATIN" and product_id not in durable_ids)
+            ):
+                continue
+            qty = clean_decimal(row.get("restes") or Decimal(0))
+            if qty < 0:
+                qty = Decimal(0)
+            defaults[product_id] = qty
+    except Exception:
+        return {}
+
+    return defaults
+
+
+def get_resale_shift_stock_state(shift_date, start_dt, end_dt):
+    delivered_current_qs = (
+        ResaleDelivery.objects.filter(
+            product__product_type="Vente en dépôt",
+            delivered_at__gte=start_dt,
+            delivered_at__lt=end_dt,
+        )
+        .values("product_id")
+        .annotate(total=Sum("quantity"))
+    )
+    delivered_current_by_product = {
+        row["product_id"]: row["total"] or Decimal(0)
+        for row in delivered_current_qs
+    }
+
+    delivered_before_qs = (
+        ResaleDelivery.objects.filter(
+            product__product_type="Vente en dépôt",
+            delivered_at__date=shift_date,
+            delivered_at__lt=start_dt,
+        )
+        .values("product_id")
+        .annotate(total=Sum("quantity"))
+    )
+    delivered_before_by_product = {
+        row["product_id"]: row["total"] or Decimal(0)
+        for row in delivered_before_qs
+    }
+
+    sales_before_qs = (
+        SaleTransactionItem.objects.filter(
+            product__product_type="Vente en dépôt",
+            transaction__date__date=shift_date,
+            transaction__date__lt=start_dt,
+        )
+        .values("product_id")
+        .annotate(total=Sum("quantity"))
+    )
+    sales_before_by_product = {
+        row["product_id"]: row["total"] or Decimal(0)
+        for row in sales_before_qs
+    }
+
+    opening_by_product = {}
+    for product_id, delivered_before in delivered_before_by_product.items():
+        opening = delivered_before - sales_before_by_product.get(product_id, Decimal(0))
+        if opening < 0:
+            opening = Decimal(0)
+        opening_by_product[product_id] = opening
+
+    return {
+        "opening_by_product": opening_by_product,
+        "delivered_current_by_product": delivered_current_by_product,
+    }
+
+
+def seed_pos_shift_remises(report):
+    if not report:
+        return {}
+
+    current = {
+        remise.product_id: remise.quantity
+        for remise in PosShiftRemise.objects.filter(report=report)
+    }
+    if current:
+        return current
+
+    defaults = get_pos_shift_remise_defaults(report.shift_date, report.shift)
+    if not defaults:
+        return {}
+
+    products = {
+        product.id: product
+        for product in SaleProduct.objects.filter(id__in=defaults.keys())
+    }
+    to_create = []
+    for product_id, quantity in defaults.items():
+        if quantity <= 0:
+            continue
+        product = products.get(product_id)
+        if not product:
+            continue
+        if product.product_type in {"Vente en dépôt", "Achat & Revente"}:
+            continue
+        if SaleProduct.objects.filter(base_product_id=product.id).exists():
+            continue
+        to_create.append(
+            PosShiftRemise(
+                report=report,
+                product=product,
+                quantity=quantity,
+            )
+        )
+
+    if to_create:
+        PosShiftRemise.objects.bulk_create(to_create)
+
+    return {
+        remise.product_id: remise.quantity
+        for remise in PosShiftRemise.objects.filter(report=report)
+    }
+
+
+def parse_local_datetime_input(value):
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw_value)
+    except ValueError:
+        return None
+    if timezone.is_naive(parsed):
+        return timezone.make_aware(parsed, timezone.get_current_timezone())
+    return parsed
+
+
+def serialize_pos_shift_report_row(report):
+    cashier_name = ""
+    if report.cashier and report.cashier.user:
+        cashier_name = report.cashier.user.get_full_name().strip() or report.cashier.user.username
+    elif report.cashier:
+        cashier_name = f"Caissier #{report.cashier.id}"
+
+    opened_at_local = timezone.localtime(report.opened_at) if report.opened_at else None
+    closed_at_local = timezone.localtime(report.closed_at) if report.closed_at else None
+
+    remises_count = getattr(report, "remises_count", report.remises.count())
+    abimes_count = getattr(report, "abimes_count", report.abimes.count())
+    consumptions_count = getattr(report, "consumptions_count", report.consumptions.count())
+    expenses_count = getattr(report, "expenses_count", report.expenses.count())
+
+    return {
+        "id": report.id,
+        "shift_date": report.shift_date.isoformat(),
+        "shift_date_label": report.shift_date.strftime("%d/%m/%Y"),
+        "shift": report.shift,
+        "cashier_id": report.cashier_id,
+        "cashier_name": cashier_name,
+        "opened_at": opened_at_local.strftime("%Y-%m-%dT%H:%M") if opened_at_local else "",
+        "opened_at_label": opened_at_local.strftime("%d/%m/%Y %H:%M") if opened_at_local else "—",
+        "closed_at": closed_at_local.strftime("%Y-%m-%dT%H:%M") if closed_at_local else "",
+        "closed_at_label": closed_at_local.strftime("%d/%m/%Y %H:%M") if closed_at_local else "—",
+        "is_closed": bool(report.closed_at),
+        "status_label": "Clôturé" if report.closed_at else "Ouvert",
+        "note": report.note or "",
+        "remises_count": remises_count,
+        "abimes_count": abimes_count,
+        "consumptions_count": consumptions_count,
+        "expenses_count": expenses_count,
+    }
+
+
+def can_manage_pos_shift_reports(user):
+    return any(
+        user.has_perm(permission)
+        for permission in (
+            "noyau.view_posshiftreport",
+            "noyau.change_posshiftreport",
+            "noyau.delete_posshiftreport",
+        )
+    )
 
 
 def build_secure_id_for_employer(employer):
@@ -309,17 +518,22 @@ def user_logout(request):
     employer = getattr(request.user, "employer", None)
     if employer:
         now_local = timezone.localtime()
-        shift_date = now_local.date()
-        shift = get_current_shift(now_local)
-        report = PosShiftReport.objects.filter(
-            shift_date=shift_date,
-            shift=shift,
-            cashier=employer,
-            closed_at__isnull=True,
-        ).first()
-        if report:
-            report.closed_at = now_local
-            report.save(update_fields=["closed_at"])
+        session_shift = request.session.get("pos_shift", {})
+        session_shift_value = (session_shift.get("shift") or "").upper()
+        session_date_raw = session_shift.get("date")
+        session_date = parse_date(session_date_raw or "", now_local.date())
+        if session_shift_value in {"MATIN", "SOIR"} and session_date == now_local.date():
+            report = PosShiftReport.objects.filter(
+                shift_date=session_date,
+                shift=session_shift_value,
+                cashier=employer,
+                closed_at__isnull=True,
+            ).first()
+            end_time = time(15, 0) if session_shift_value == "MATIN" else time(22, 0)
+            if report and now_local.time() >= end_time:
+                request.session["logout_blocked"] = True
+                return redirect("view_pos")
+
     logout(request)
     return redirect("login")
 
@@ -1608,7 +1822,9 @@ def ai_assistant_query(request):
             }],
         })
 
-    pg_match = re.search(r"pg-?\d+", normalized)
+    pg_match = re.search(r"pg-\d{8}-\d+", normalized)
+    if not pg_match:
+        pg_match = re.search(r"pg-?\d+", normalized)
     if pg_match:
         code = pg_match.group(0).upper()
         if not code.startswith("PG-"):
@@ -5074,7 +5290,7 @@ POINT_TO_SOLDE_KMF = Decimal("100.00")  # 1 point gagne = 100 KMF de solde
 VOUCHER_EXPIRY_DAYS = 30
 VOUCHER_CODE_PREFIX = "BRM-"
 PYROMANE_ORDER_PREFIX = "PG-"
-PYROMANE_ORDER_START = 1200
+PYROMANE_ORDER_START = 1
 
 def _q(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"))
@@ -5140,22 +5356,46 @@ def create_change_voucher(amount: Decimal, employer: Employer, transaction: Sale
     )
 
 
-def generate_pyromane_order_number():
-    last = PyromaneOrder.objects.order_by("-id").first()
-    if last and last.order_number:
-        match = re.search(r"PG-(\\d+)", last.order_number)
-        if match:
-            next_number = int(match.group(1)) + 1
-        else:
-            next_number = PYROMANE_ORDER_START
-    else:
-        next_number = PYROMANE_ORDER_START
+def serialize_change_voucher(voucher: CashChangeVoucher):
+    if not voucher:
+        return None
+    return {
+        "code": voucher.code,
+        "amount": float(_q(voucher.amount)),
+    }
 
-    for _ in range(50):
-        candidate = f"{PYROMANE_ORDER_PREFIX}{next_number}"
+
+def generate_pyromane_order_number():
+    # Format: PG-YYYYMMDD-### (sequence resets daily)
+    today = localdate()
+    date_prefix = today.strftime("%Y%m%d")
+    prefix = f"{PYROMANE_ORDER_PREFIX}{date_prefix}-"
+
+    max_numeric = (
+        PyromaneOrder.objects
+        .filter(order_number__startswith=prefix)
+        .annotate(
+            num=Cast(
+                Substr("order_number", len(prefix) + 1),
+                IntegerField(),
+            )
+        )
+        .aggregate(max_num=Max("num"))
+        .get("max_num")
+    )
+    base = max_numeric or 0
+    next_number = max(base + 1, PYROMANE_ORDER_START)
+
+    for _ in range(500):
+        candidate = f"{prefix}{next_number:03d}"
         if not PyromaneOrder.objects.filter(order_number=candidate).exists():
             return candidate
         next_number += 1
+
+    # Fallback to timestamp if something is wrong
+    fallback = f"{prefix}{timezone.now().strftime('%H%M%S')}"
+    if not PyromaneOrder.objects.filter(order_number=fallback).exists():
+        return fallback
     raise ValueError("Impossible de generer un numero PG unique.")
 
 @permission_required("noyau.view_loyalty", raise_exception=True)
@@ -5169,6 +5409,7 @@ def view_loyalty(request):
     loyalties_json = loyalties.values(
         "id",
         "card_id",
+        "card_type",
         "setting",
         "phone",
         "solde",
@@ -5189,6 +5430,10 @@ def view_loyalty(request):
         phone = request.POST.get("phone", "").strip()
         type = request.POST.get("type", "").strip()
         solde = clean_decimal(request.POST.get("solde", "").strip())
+        card_type = request.POST.get("card_type", Loyalty.CARD_TYPE_STANDARD).strip().upper() or Loyalty.CARD_TYPE_STANDARD
+        valid_card_types = {choice[0] for choice in Loyalty.CARD_TYPE_CHOICES}
+        if card_type not in valid_card_types:
+            card_type = Loyalty.CARD_TYPE_STANDARD
         
         if type == "change":
             if not request.user.has_perm("noyau.change_loyalty"):
@@ -5197,6 +5442,7 @@ def view_loyalty(request):
             loyalty = get_object_or_404(Loyalty, id=loyalty_id)
             loyalty.client = client
             loyalty.phone = phone
+            loyalty.card_type = card_type
             loyalty.save()
             
         if type == "solde":
@@ -5254,11 +5500,14 @@ def get_loyalty(request, loyalty_id):
         loyalty = Loyalty.objects.get(id=loyalty_id)
 
         data = {
+            "id": loyalty.id,
             "client": loyalty.client,
             "phone": loyalty.phone,
             "solde": float(loyalty.solde),
             "card_id": loyalty.card_id,
             "setting": loyalty.setting,
+            "points_balance": int(loyalty.points_balance or 0),
+            "card_type": loyalty.card_type,
         }
         return JsonResponse({"success": True, "loyalty": data})
     except Loyalty.DoesNotExist:
@@ -5289,10 +5538,21 @@ def add_loyalty(request):
     
     if request.method == "POST":
         try:
+            payload = {}
+            if request.content_type and "application/json" in request.content_type:
+                payload = json.loads(request.body or "{}")
+            else:
+                payload = request.POST
+
             today = date.today()
             initial_solde = Decimal("2000.00")
             initial_points = calculate_topup_points(initial_solde)
             client = "Nouveau Client"
+            card_type = str(payload.get("card_type", Loyalty.CARD_TYPE_STANDARD)).strip().upper() or Loyalty.CARD_TYPE_STANDARD
+
+            valid_card_types = {choice[0] for choice in Loyalty.CARD_TYPE_CHOICES}
+            if card_type not in valid_card_types:
+                return JsonResponse({"error": "Type de carte invalide."}, status=400)
 
             last_card = (
                 Loyalty.objects.filter(card_id__regex=r"^CARD\d+$")
@@ -5317,6 +5577,7 @@ def add_loyalty(request):
                 client=client,
                 date=today,
                 phone="-",
+                card_type=card_type,
                 points_balance=initial_points,
                 points_remainder=Decimal("0.00"),
             )
@@ -5325,7 +5586,7 @@ def add_loyalty(request):
                 move_type="Recharge",
                 points=initial_points,
                 balance_after=initial_points,
-                note="Creation de carte",
+                note=f"Creation de carte {loyalty.get_card_type_display()}",
                 date=today,
             )
             return JsonResponse({"success": True})
@@ -6307,6 +6568,45 @@ def get_rawmaterial_lots(request, inventory_id):
         "lots": data,
     })
 
+
+@permission_required("noyau.change_rawmaterial", raise_exception=True)
+def update_rawmaterial_lots(request, inventory_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Données invalides."}, status=400)
+
+    inventory = get_object_or_404(RawMaterial, id=inventory_id)
+    if inventory.stock_mode != "FEFO":
+        return JsonResponse({"success": False, "error": "Ingrédient non FEFO."}, status=400)
+
+    lots_payload = payload.get("lots", [])
+    if not isinstance(lots_payload, list):
+        return JsonResponse({"success": False, "error": "Lots invalides."}, status=400)
+
+    updated = 0
+    for item in lots_payload:
+        lot_id = item.get("id")
+        expiry_str = (item.get("expiration_date") or "").strip()
+        if not lot_id:
+            continue
+        lot = RawMaterialLot.objects.filter(id=lot_id, raw_material=inventory).first()
+        if not lot:
+            continue
+        expiry_date = None
+        if expiry_str:
+            try:
+                expiry_date = date.fromisoformat(expiry_str)
+            except Exception:
+                expiry_date = None
+        lot.expiration_date = expiry_date
+        lot.save(update_fields=["expiration_date"])
+        updated += 1
+
+    return JsonResponse({"success": True, "updated": updated})
+
 @permission_required("noyau.delete_rawmaterial", raise_exception=True)
 def delete_rawmaterial(request, inventory_id):
     
@@ -6325,6 +6625,13 @@ def view_pos(request):
     today = now_dt.date()
     time_shift = get_current_shift(now_dt)
     employer = getattr(request.user, "employer", None)
+
+    # Auto-close previous day shifts at 00:00 if they were left open
+    stale_reports = PosShiftReport.objects.filter(shift_date__lt=today, closed_at__isnull=True)
+    for report in stale_reports:
+        close_time = datetime.combine(report.shift_date + timedelta(days=1), time(0, 0))
+        report.closed_at = timezone.make_aware(close_time)
+        report.save(update_fields=["closed_at"])
     session_shift = request.session.get("pos_shift", {})
     shift_choice = None
     session_shift_date = session_shift.get("date")
@@ -6340,37 +6647,17 @@ def view_pos(request):
         )
         if existing_report and not existing_report.closed_at:
             shift_choice = existing_report.shift
-    effective_shift = shift_choice or time_shift
+    effective_shift = shift_choice
     shift_report = (
         PosShiftReport.objects.filter(shift_date=today, shift=shift_choice).first()
         if shift_choice
         else None
     )
-    base_with_children_ids = set(
-        SaleProduct.objects.exclude(base_product_id=None).values_list("base_product_id", flat=True)
-    )
-    prev_shift = "SOIR" if effective_shift == "MATIN" else "MATIN"
-    prev_date = today - timedelta(days=1) if effective_shift == "MATIN" else today
-    remises_defaults = {}
-    prev_report = PosShiftReport.objects.filter(shift_date=prev_date, shift=prev_shift).first()
-    if prev_report:
-        try:
-            prev_payload = build_pos_shift_report_payload(prev_report, prev_date, prev_shift)
-            durable_ids = set(
-                SaleProduct.objects.filter(stock_known=True, category__iexact="Durable").values_list("id", flat=True)
-            )
-            for row in prev_payload.get("ready_rows", []):
-                if (
-                    row.get("id") in durable_ids
-                    and row.get("id") not in base_with_children_ids
-                    and row.get("id") not in resale_ar_ids
-                ):
-                    qty = clean_decimal(row.get("restes") or Decimal(0))
-                    if qty < 0:
-                        qty = Decimal(0)
-                    remises_defaults[str(row.get("id"))] = float(qty)
-        except Exception:
-            remises_defaults = {}
+    remises_defaults_raw = get_pos_shift_remise_defaults(today, effective_shift) if effective_shift else {}
+    remises_defaults = {
+        str(product_id): float(quantity)
+        for product_id, quantity in remises_defaults_raw.items()
+    }
     shift_start, shift_end = get_report_window(shift_report, today, effective_shift) if effective_shift else (None, None)
     production_totals = SaleProduction.objects.filter(
         production_date=today,
@@ -6410,34 +6697,20 @@ def view_pos(request):
         ar_sales_qs = ar_sales_qs.filter(transaction__date__date=today)
     ar_sales_total = ar_sales_qs.aggregate(total=Sum("subtotal"))["total"] or Decimal(0)
     resale_types = {"Vente en dépôt"}
-    resale_sales_before_by_product = {}
-    resale_out_before_by_product = {}
-    resale_out_current_by_product = {}
-    if shift_start:
-        resale_out_before_qs = StockMovement.objects.filter(
-            movement_type="Sortie",
-            destination="POS",
-            raw_material__linked_product__product_type="Achat & Revente",
-            date__lt=shift_start,
-        ).values("raw_material__linked_product_id").annotate(total=Sum("quantity"))
-        resale_out_before_by_product = {
-            row["raw_material__linked_product_id"]: row["total"] or Decimal(0)
-            for row in resale_out_before_qs
-        }
-        resale_sales_before_qs = SaleTransactionItem.objects.filter(
-            product__product_type="Achat & Revente",
-            transaction__date__lt=shift_start,
+    resale_opening_by_product = {}
+    resale_delivered_current_by_product = {}
+    if shift_start and shift_end:
+        resale_state = get_resale_shift_stock_state(today, shift_start, shift_end)
+        resale_opening_by_product = resale_state["opening_by_product"]
+        resale_delivered_current_by_product = resale_state["delivered_current_by_product"]
+    else:
+        resale_deliveries = ResaleDelivery.objects.filter(
+            product__product_type="Vente en dépôt",
+            delivered_at__date=today,
         ).values("product_id").annotate(total=Sum("quantity"))
-        resale_sales_before_by_product = {
-            row["product_id"]: row["total"] or Decimal(0)
-            for row in resale_sales_before_qs
+        resale_delivered_current_by_product = {
+            row["product_id"]: row["total"] or Decimal(0) for row in resale_deliveries
         }
-    resale_deliveries = ResaleDelivery.objects.filter(
-        delivered_at__date=today
-    ).values("product_id").annotate(total=Sum("quantity"))
-    resale_delivered_by_product = {
-        row["product_id"]: row["total"] or Decimal(0) for row in resale_deliveries
-    }
     ar_out_qs = StockMovement.objects.filter(
         movement_type="Sortie",
         destination="POS",
@@ -6473,68 +6746,18 @@ def view_pos(request):
             row["product_id"]: row["total"] or Decimal(0)
             for row in ar_sales_before_qs
         }
-    resale_sales_totals = SaleTransactionItem.objects.filter(
-        transaction__date__date=today,
-        product__product_type="Vente en dépôt",
-    ).values("product_id").annotate(total=Sum("quantity"))
-    resale_sales_by_product = {
-        row["product_id"]: row["total"] or Decimal(0) for row in resale_sales_totals
-    }
-
-    resale_out_current_qs = StockMovement.objects.filter(
-        movement_type="Sortie",
-        destination="POS",
-        raw_material__linked_product__product_type="Achat & Revente",
-    )
-    if shift_start and shift_end:
-        resale_out_current_qs = resale_out_current_qs.filter(date__gte=shift_start, date__lt=shift_end)
-    else:
-        resale_out_current_qs = resale_out_current_qs.filter(date__date=today)
-    resale_out_current_qs = resale_out_current_qs.values("raw_material__linked_product_id").annotate(total=Sum("quantity"))
-    resale_out_current_by_product = {
-        row["raw_material__linked_product_id"]: row["total"] or Decimal(0)
-        for row in resale_out_current_qs
-    }
     data = []
-    products = SaleProduct.objects.filter(stock_known=True).select_related("base_product").order_by('name')
+    products = SaleProduct.objects.select_related("base_product").order_by('name')
     products_payload = []
     remises_by_product = {}
     abimes_by_product = {}
     if shift_report:
-        remises_by_product = {
-            r.product_id: r.quantity for r in PosShiftRemise.objects.filter(report=shift_report)
-        }
+        remises_by_product = seed_pos_shift_remises(shift_report)
         abimes_by_product = {
             row["product_id"]: row["qty"] or Decimal(0)
             for row in PosShiftAbime.objects.filter(report=shift_report)
             .values("product_id")
             .annotate(qty=Sum("quantity"))
-        }
-    if shift_report and not remises_by_product and remises_defaults:
-        existing_products = set(remises_by_product.keys())
-        for pid, qty in remises_defaults.items():
-            product_id = int(pid)
-            if product_id in existing_products:
-                continue
-            if qty is None:
-                continue
-            quantity = clean_decimal(qty)
-            if quantity <= 0:
-                continue
-            product = SaleProduct.objects.filter(id=product_id).first()
-            if not product:
-                continue
-            if product.product_type in {"Vente en dépôt", "Achat & Revente"}:
-                continue
-            if SaleProduct.objects.filter(base_product_id=product.id).exists():
-                continue
-            PosShiftRemise.objects.create(
-                report=shift_report,
-                product=product,
-                quantity=quantity,
-            )
-        remises_by_product = {
-            r.product_id: r.quantity for r in PosShiftRemise.objects.filter(report=shift_report)
         }
     if not remises_by_product and remises_defaults:
         remises_by_product = {int(pid): clean_decimal(qty) for pid, qty in remises_defaults.items()}
@@ -6577,18 +6800,41 @@ def view_pos(request):
         remaining_base_by_id[product.id] = remaining
 
     for product in products:
+        if not product.stock_known:
+            stock_value = "∞"
+            data.append({
+                'id': product.id,
+                'image': product.image,
+                'unit_price': float(product.unit_price),
+                'name': product.name,
+                'category': product.category,
+                'product_type': product.product_type,
+                'stock_known': product.stock_known,
+                'stock': stock_value,
+            })
+            products_payload.append({
+                "id": product.id,
+                "name": product.name,
+                "unit_price": float(product.unit_price),
+                "stock_known": product.stock_known,
+                "category": product.category,
+                "base_product_id": product.base_product_id,
+                "product_type": product.product_type,
+            })
+            continue
+
         sold = sales_by_product.get(product.id, Decimal(0))
         abimes = abimes_by_product.get(product.id, Decimal(0))
         remaining = Decimal(0)
         if product.product_type in resale_types:
-            delivered = resale_delivered_by_product.get(product.id, Decimal(0))
-            sold_today = resale_sales_by_product.get(product.id, Decimal(0))
-            remaining = delivered - sold_today
+            opening = resale_opening_by_product.get(product.id, Decimal(0))
+            delivered_current = resale_delivered_current_by_product.get(product.id, Decimal(0))
+            remaining = opening + delivered_current - sold
         elif product.product_type == "Achat & Revente":
-            opening = resale_out_before_by_product.get(product.id, Decimal(0)) - resale_sales_before_by_product.get(product.id, Decimal(0))
+            opening = ar_out_before_by_product.get(product.id, Decimal(0)) - ar_sales_before_by_product.get(product.id, Decimal(0))
             if opening < 0:
                 opening = Decimal(0)
-            delivered_current = resale_out_current_by_product.get(product.id, Decimal(0))
+            delivered_current = ar_out_by_product.get(product.id, Decimal(0))
             remaining = opening + delivered_current - sold
         elif product.base_product_id:
             factor = product.conversion_factor or Decimal("1.00")
@@ -6623,6 +6869,7 @@ def view_pos(request):
         })
     loyalties_json = json.dumps([], cls=DjangoJSONEncoder)
     pyromane_orders = []
+    logout_blocked = bool(request.session.pop("logout_blocked", False))
 
     context = {
         "first_name": first_name,
@@ -6645,6 +6892,7 @@ def view_pos(request):
             "cashier": f"{first_name} {last_name}",
             "time_shift": time_shift,
             "needs_confirm": bool(shift_choice and shift_choice != time_shift and not session_shift_confirmed),
+            "logout_blocked": logout_blocked,
             "resale_total": float(resale_sales_total),
             "ar_total": float(ar_sales_total),
         },
@@ -6672,6 +6920,7 @@ def resolve_loyalty(request):
     loyalties = Loyalty.objects.values(
         "id",
         "card_id",
+        "card_type",
         "setting",
         "phone",
         "solde",
@@ -6692,6 +6941,7 @@ def resolve_loyalty(request):
                 "client": loyalty["client"],
                 "points_balance": int(loyalty["points_balance"] or 0),
                 "points_remainder": float(loyalty["points_remainder"] or 0),
+                "card_type": loyalty["card_type"],
             }
             return JsonResponse({"success": True, "loyalty": loyalty_payload})
 
@@ -6706,6 +6956,7 @@ def resolve_loyalty(request):
                 "client": loyalty["client"],
                 "points_balance": int(loyalty["points_balance"] or 0),
                 "points_remainder": float(loyalty["points_remainder"] or 0),
+                "card_type": loyalty["card_type"],
             }
             return JsonResponse({"success": True, "loyalty": loyalty_payload})
 
@@ -6714,29 +6965,9 @@ def resolve_loyalty(request):
 
 @permission_required("noyau.view_pyromaneorder", raise_exception=True)
 def view_pyromane(request):
-    current_user = request.user
-    first_name = current_user.first_name.capitalize()
-    last_name = current_user.last_name.capitalize()
-    first_letter = first_name[0].upper() if first_name else ""
-
-    products = SaleProduct.objects.filter(stock_known=False).order_by("name")
-    data = []
-    for product in products:
-        data.append({
-            "id": product.id,
-            "image": product.image,
-            "price": float(product.unit_price),
-            "name": product.name,
-            "category": product.category,
-        })
-    context = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "first_letter": first_letter,
-        "role": getattr(getattr(current_user, "employer", None), "role", None),
-        "products": data,
-    }
-    return render(request, "pyromane/view_pyromane.html", context)
+    if request.user.has_perm("noyau.view_pos"):
+        return redirect("view_pos")
+    return redirect("view_dashboard")
 
 
 @permission_required("noyau.view_pyromaneorder", raise_exception=True)
@@ -6997,13 +7228,9 @@ def pyromane_order_update(request):
 def build_pos_shift_report_payload(report, shift_date, shift):
     start_dt, end_dt = get_report_window(report, shift_date, shift)
 
-    resale_deliveries = ResaleDelivery.objects.filter(
-        delivered_at__gte=start_dt,
-        delivered_at__lt=end_dt,
-    ).values("product_id").annotate(total=Sum("quantity"))
-    resale_delivered_by_product = {
-        row["product_id"]: row["total"] or Decimal(0) for row in resale_deliveries
-    }
+    resale_state = get_resale_shift_stock_state(shift_date, start_dt, end_dt)
+    resale_opening_by_product = resale_state["opening_by_product"]
+    resale_delivered_current_by_product = resale_state["delivered_current_by_product"]
 
     sales_items = SaleTransactionItem.objects.filter(
         transaction__date__gte=start_dt,
@@ -7028,6 +7255,40 @@ def build_pos_shift_report_payload(report, shift_date, shift):
     )
     production_by_product = {row["product_id"]: row["qty"] or Decimal(0) for row in production_items}
 
+    # Achat & Revente : sorties vers POS (stock movement) + ventes avant la fenêtre
+    ar_out_current = StockMovement.objects.filter(
+        movement_type="Sortie",
+        destination="POS",
+        raw_material__linked_product__isnull=False,
+        raw_material__linked_product__product_type="Achat & Revente",
+        date__gte=start_dt,
+        date__lt=end_dt,
+    ).values("raw_material__linked_product_id").annotate(total=Sum("quantity"))
+    ar_out_by_product = {
+        row["raw_material__linked_product_id"]: row["total"] or Decimal(0)
+        for row in ar_out_current
+    }
+
+    ar_out_before = StockMovement.objects.filter(
+        movement_type="Sortie",
+        destination="POS",
+        raw_material__linked_product__isnull=False,
+        raw_material__linked_product__product_type="Achat & Revente",
+        date__lt=start_dt,
+    ).values("raw_material__linked_product_id").annotate(total=Sum("quantity"))
+    ar_out_before_by_product = {
+        row["raw_material__linked_product_id"]: row["total"] or Decimal(0)
+        for row in ar_out_before
+    }
+
+    ar_sales_before = SaleTransactionItem.objects.filter(
+        transaction__date__lt=start_dt,
+    ).values("product_id").annotate(qty=Sum("quantity"))
+    ar_sales_before_by_product = {
+        row["product_id"]: row["qty"] or Decimal(0)
+        for row in ar_sales_before
+    }
+
     remises_by_product = {
         r.product_id: r.quantity for r in PosShiftRemise.objects.filter(report=report)
     }
@@ -7047,13 +7308,17 @@ def build_pos_shift_report_payload(report, shift_date, shift):
     for product in ready_products:
         sold = sales_by_product.get(product.id, {}).get("qty", Decimal(0))
         if product.product_type == "Vente en dépôt":
-            delivered = resale_delivered_by_product.get(product.id, Decimal(0))
+            opening = resale_opening_by_product.get(product.id, Decimal(0))
+            delivered_current = resale_delivered_current_by_product.get(product.id, Decimal(0))
+            delivered = opening + delivered_current
             restes = delivered - sold
             if restes < 0:
                 restes = Decimal(0)
             resale_rows.append({
                 "id": product.id,
                 "name": product.name,
+                "opening": opening,
+                "received": delivered_current,
                 "delivered": delivered,
                 "sold": sold,
                 "restes": restes,
@@ -7278,18 +7543,7 @@ def pos_shift_select(request):
             cashier=employer,
         )
 
-    session_shift = request.session.get("pos_shift", {})
-    session_shift_value = (session_shift.get("shift") or "").upper()
-    if force and session_shift.get("date") == today.isoformat() and session_shift_value and session_shift_value != shift:
-        prev_report = PosShiftReport.objects.filter(
-            shift_date=today,
-            shift=session_shift_value,
-            cashier=employer,
-            closed_at__isnull=True,
-        ).first()
-        if prev_report:
-            prev_report.closed_at = timezone.now()
-            prev_report.save()
+    seed_pos_shift_remises(report)
 
     request.session["pos_shift"] = {
         "date": today.isoformat(),
@@ -7568,14 +7822,27 @@ def pos_shift_close(request):
     shift_date = parse_date(payload.get("date"), localdate())
     shift = normalize_shift(payload.get("shift"), default=get_current_shift(timezone.localtime()))
     employer = getattr(request.user, "employer", None)
+    close_only = bool(payload.get("close_only"))
 
-    report, _ = PosShiftReport.objects.get_or_create(
+    report = PosShiftReport.objects.filter(
         shift_date=shift_date,
         shift=shift,
-        defaults={"cashier": employer},
-    )
-    if report.cashier is None:
+    ).first()
+    if not report:
+        return JsonResponse({"error": "Aucun shift à clôturer."}, status=404)
+    if report.cashier and employer and report.cashier != employer:
+        return JsonResponse({"error": "Shift attribué à un autre caissier."}, status=409)
+    if report.cashier is None and employer:
         report.cashier = employer
+        report.save(update_fields=["cashier"])
+    if report.closed_at:
+        return JsonResponse({"error": "Ce shift est déjà clôturé."}, status=409)
+
+    if close_only:
+        report.closed_at = timezone.now()
+        report.save(update_fields=["closed_at"])
+        report_payload = build_pos_shift_report_payload(report, shift_date, shift)
+        return JsonResponse({"success": True, "report": report_payload})
 
     PosShiftAbime.objects.filter(report=report).delete()
     for item in payload.get("abimes", []):
@@ -7701,6 +7968,106 @@ def pos_shift_cashiers(request):
         cashiers.append({"id": cashier.id, "name": name})
 
     return JsonResponse({"success": True, "cashiers": cashiers})
+
+
+@permission_required("noyau.view_sale", raise_exception=True)
+def get_pos_shift_report_manage(request, report_id):
+    if request.method != "GET":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    report = get_object_or_404(
+        PosShiftReport.objects.select_related("cashier__user").annotate(
+            remises_count=Count("remises", distinct=True),
+            abimes_count=Count("abimes", distinct=True),
+            consumptions_count=Count("consumptions", distinct=True),
+            expenses_count=Count("expenses", distinct=True),
+        ),
+        id=report_id,
+    )
+    return JsonResponse({"success": True, "report": serialize_pos_shift_report_row(report)})
+
+
+@permission_required("noyau.change_posshiftreport", raise_exception=True)
+def update_pos_shift_report_manage(request, report_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Données invalides."}, status=400)
+
+    report = get_object_or_404(PosShiftReport, id=report_id)
+
+    shift_date = parse_date(payload.get("shift_date", ""), None)
+    shift = normalize_shift((payload.get("shift") or "").upper(), default="MATIN")
+    cashier_id = payload.get("cashier_id")
+    opened_at = parse_local_datetime_input(payload.get("opened_at"))
+    closed_at = parse_local_datetime_input(payload.get("closed_at"))
+    note = (payload.get("note") or "").strip()
+
+    if not shift_date:
+        return JsonResponse({"success": False, "error": "Date de shift invalide."}, status=400)
+    if not opened_at:
+        return JsonResponse({"success": False, "error": "Date d'ouverture invalide."}, status=400)
+    if closed_at and closed_at < opened_at:
+        return JsonResponse({"success": False, "error": "La clôture doit être après l'ouverture."}, status=400)
+
+    cashier = None
+    if cashier_id not in [None, "", "null"]:
+        try:
+            cashier = Employer.objects.get(id=int(cashier_id))
+        except (Employer.DoesNotExist, TypeError, ValueError):
+            return JsonResponse({"success": False, "error": "Caissier invalide."}, status=400)
+
+    conflict = PosShiftReport.objects.filter(shift_date=shift_date, shift=shift).exclude(id=report.id).exists()
+    if conflict:
+        return JsonResponse({"success": False, "error": "Un shift existe déjà pour cette date et ce créneau."}, status=400)
+
+    report.shift_date = shift_date
+    report.shift = shift
+    report.cashier = cashier
+    report.opened_at = opened_at
+    report.closed_at = closed_at
+    report.note = note
+    report.save(update_fields=["shift_date", "shift", "cashier", "opened_at", "closed_at", "note"])
+
+    report = (
+        PosShiftReport.objects.select_related("cashier__user")
+        .annotate(
+            remises_count=Count("remises", distinct=True),
+            abimes_count=Count("abimes", distinct=True),
+            consumptions_count=Count("consumptions", distinct=True),
+            expenses_count=Count("expenses", distinct=True),
+        )
+        .get(id=report.id)
+    )
+    return JsonResponse({"success": True, "report": serialize_pos_shift_report_row(report)})
+
+
+@permission_required("noyau.delete_posshiftreport", raise_exception=True)
+def delete_pos_shift_report_manage(request, report_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    report = get_object_or_404(
+        PosShiftReport.objects.annotate(
+            remises_count=Count("remises", distinct=True),
+            abimes_count=Count("abimes", distinct=True),
+            consumptions_count=Count("consumptions", distinct=True),
+            expenses_count=Count("expenses", distinct=True),
+        ),
+        id=report_id,
+    )
+
+    counts = {
+        "remises": getattr(report, "remises_count", 0),
+        "abimes": getattr(report, "abimes_count", 0),
+        "consumptions": getattr(report, "consumptions_count", 0),
+        "expenses": getattr(report, "expenses_count", 0),
+    }
+    report.delete()
+    return JsonResponse({"success": True, "deleted_id": report_id, "counts": counts})
 
 @permission_required("noyau.view_pos", raise_exception=True)
 def add_transaction(request):
@@ -7903,14 +8270,14 @@ def add_transaction(request):
             if voucher_remainder > 0:
                 remainder_voucher = create_change_voucher(voucher_remainder, employer, transaction)
                 if remainder_voucher:
-                    vouchers_to_print.append({"code": remainder_voucher.code})
+                    vouchers_to_print.append(serialize_change_voucher(remainder_voucher))
 
         if method == "cash" and issue_change_voucher and total_to_pay > 0:
             change_amount = _q(cash_received - total_to_pay)
             if change_amount > 0:
                 change_voucher = create_change_voucher(change_amount, employer, transaction)
                 if change_voucher:
-                    vouchers_to_print.append({"code": change_voucher.code})
+                    vouchers_to_print.append(serialize_change_voucher(change_voucher))
 
         return JsonResponse({
             "success": True,
@@ -8053,14 +8420,48 @@ def print_ticket(request):
         return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
     try:
-        last_transaction = SaleTransaction.objects.order_by("-id").first()
-        if not last_transaction:
+        data = json.loads(request.body or "{}")
+        transaction_id = data.get("transaction_id")
+        transaction = None
+        if transaction_id not in [None, "", "null"]:
+            try:
+                transaction = (
+                    SaleTransaction.objects
+                    .select_related("employer__user")
+                    .filter(id=int(transaction_id))
+                    .first()
+                )
+            except (TypeError, ValueError):
+                transaction = None
+
+        if not transaction:
+            transaction = (
+                SaleTransaction.objects
+                .select_related("employer__user")
+                .order_by("-id")
+                .first()
+            )
+
+        if not transaction:
             return JsonResponse({"error": "Aucune transaction trouvée."}, status=400)
 
-        data = json.loads(request.body)
-        items = data.get("items", [])
-        total = data.get("total", 0)
+        items = list(
+            SaleTransactionItem.objects
+            .select_related("product")
+            .filter(transaction=transaction)
+            .order_by("id")
+        )
+        payload_items = data.get("items", [])
+        total = _q(transaction.total_amount)
         TICKET_WIDTH = 48
+        issued_vouchers = list(
+            transaction.change_vouchers_issued.order_by("issued_at", "id")
+        )
+        tx_local = timezone.localtime(transaction.date)
+        cashier = "—"
+        if transaction.employer and transaction.employer.user:
+            cashier_name = f"{transaction.employer.user.first_name} {transaction.employer.user.last_name}".strip()
+            cashier = cashier_name or transaction.employer.user.username
 
         # ---------------------------
         # RÉGLAGES D'IMPRESSION THERMIQUE
@@ -8074,26 +8475,42 @@ def print_ticket(request):
         ticket_text += "Salon de the".center(TICKET_WIDTH) + "\n"
         ticket_text += "Comores, Moroni".center(TICKET_WIDTH) + "\n"
         ticket_text += "-" * TICKET_WIDTH + "\n"
-        ticket_text += f"DATE    : {timezone.localdate().strftime('%d/%m/%Y')}\n"
-        ticket_text += f"TICKET  : {last_transaction.id}\n"
+        ticket_text += f"DATE    : {tx_local.strftime('%d/%m/%Y')}\n"
+        ticket_text += f"HEURE   : {tx_local.strftime('%H:%M')}\n"
+        ticket_text += f"TICKET  : {transaction.id}\n"
+        ticket_text += f"CAISSIER: {cashier}\n"
         ticket_text += "-" * TICKET_WIDTH + "\n"
 
         # ---------------------------
         # ARTICLES
         # ---------------------------
-        for item in items:
-            product_id = item.get("id")
-            quantity = item.get("quantity", 1)
-            subtotal = item.get("subtotal", 0)
+        rendered_items = items
+        if not rendered_items and payload_items:
+            fallback_items = []
+            for item in payload_items:
+                product_id = item.get("id")
+                quantity = int(item.get("quantity", 1) or 1)
+                subtotal = clean_decimal(item.get("subtotal", 0))
+                product = SaleProduct.objects.filter(id=product_id).first()
+                fallback_items.append({
+                    "name": product.name if product else "Produit inconnu",
+                    "quantity": quantity,
+                    "subtotal": subtotal,
+                })
+            rendered_items = fallback_items
 
-            try:
-                product = SaleProduct.objects.get(id=product_id)
-                article = product.name.capitalize()
-            except SaleProduct.DoesNotExist:
-                article = "Produit inconnu"
+        for item in rendered_items:
+            if isinstance(item, SaleTransactionItem):
+                article = item.product.name.capitalize() if item.product else "Produit inconnu"
+                quantity = item.quantity
+                subtotal = _q(item.subtotal)
+            else:
+                article = (item.get("name") or "Produit inconnu").capitalize()
+                quantity = item.get("quantity", 1)
+                subtotal = _q(clean_decimal(item.get("subtotal", 0)))
 
             article_text = f"{article} x{quantity}"
-            prix = f"{subtotal} KMF"
+            prix = f"{_q(clean_decimal(subtotal))} KMF"
             espaces = TICKET_WIDTH - len(article_text) - len(prix)
             ticket_text += article_text + " " * max(1, espaces) + prix + "\n"
 
@@ -8102,15 +8519,36 @@ def print_ticket(request):
         # ---------------------------
         ticket_text += "-" * TICKET_WIDTH + "\n"
         total_line = f"TOTAL"
-        espaces_total = TICKET_WIDTH - len(total_line) - len(f"{total} KMF")
-        ticket_text += total_line + " " * max(1, espaces_total) + f"{total} KMF\n"
+        total_label = f"{_q(total)} KMF"
+        espaces_total = TICKET_WIDTH - len(total_line) - len(total_label)
+        ticket_text += total_line + " " * max(1, espaces_total) + f"{total_label}\n"
         ticket_text += "-" * TICKET_WIDTH + "\n\n"
+
+        # ---------------------------
+        # BON DE RENDU / RESTE A UTILISER
+        # ---------------------------
+        voucher_section = ""
+        if issued_vouchers:
+            voucher_section += "-" * TICKET_WIDTH + "\n"
+            for voucher in issued_vouchers:
+                voucher_amount = f"{_q(voucher.amount)} KMF"
+                voucher_section += chr(27) + chr(97) + chr(1)
+                voucher_section += "\n"
+                voucher_section += "MONTANT\n"
+                voucher_section += voucher_amount + "\n\n"
+                voucher_section += build_escpos_qr(voucher.code)
+                voucher_section += chr(27) + chr(97) + chr(0)
+                voucher_section += "\n\n"
+            voucher_section += "-" * TICKET_WIDTH + "\n"
 
         # ---------------------------
         # MESSAGE DE FIN
         # ---------------------------
         ticket_text += "MERCI".center(TICKET_WIDTH) + "\n"
         ticket_text += "BONNE JOURNEE".center(TICKET_WIDTH) + "\n"
+        if voucher_section:
+            ticket_text += "\n"
+            ticket_text += voucher_section
 
         # ---------------------------
         # FEED + CUT
@@ -8456,6 +8894,60 @@ def view_sale(request):
         },
     }
     return render(request, "sale/view_sale.html", context)
+
+
+def view_pos_shift_reports(request):
+    if not can_manage_pos_shift_reports(request.user):
+        raise PermissionDenied
+
+    current_user = request.user
+    first_name = current_user.first_name.capitalize()
+    last_name = current_user.last_name.capitalize()
+    first_letter = first_name[0].upper() if first_name else ""
+
+    shift_reports_qs = (
+        PosShiftReport.objects
+        .select_related("cashier__user")
+        .annotate(
+            remises_count=Count("remises", distinct=True),
+            abimes_count=Count("abimes", distinct=True),
+            consumptions_count=Count("consumptions", distinct=True),
+            expenses_count=Count("expenses", distinct=True),
+        )
+        .order_by("-shift_date", "-shift", "-opened_at")
+    )
+    shift_reports = [serialize_pos_shift_report_row(report) for report in shift_reports_qs]
+
+    shift_cashiers = []
+    for employer in Employer.objects.select_related("user").order_by("user__first_name", "user__last_name"):
+        if not employer.user:
+            continue
+        label = employer.user.get_full_name().strip() or employer.user.username
+        shift_cashiers.append({"id": employer.id, "name": label})
+
+    today = localdate()
+    total_reports = shift_reports_qs.count()
+    open_reports = shift_reports_qs.filter(closed_at__isnull=True).count()
+    closed_reports = total_reports - open_reports
+    today_reports = shift_reports_qs.filter(shift_date=today).count()
+
+    context = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "first_letter": first_letter,
+        "role": getattr(getattr(current_user, "employer", None), "role", None),
+        "shift_reports": shift_reports,
+        "shift_cashiers": shift_cashiers,
+        "can_change_shift_reports": request.user.has_perm("noyau.change_posshiftreport"),
+        "can_delete_shift_reports": request.user.has_perm("noyau.delete_posshiftreport"),
+        "shift_summary": {
+            "total": total_reports,
+            "open": open_reports,
+            "closed": closed_reports,
+            "today": today_reports,
+        },
+    }
+    return render(request, "pos/view_shift_reports.html", context)
 
 
 @permission_required("noyau.view_cashchangevoucher", raise_exception=True)

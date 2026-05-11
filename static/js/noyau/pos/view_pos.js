@@ -28,18 +28,23 @@ document.addEventListener("DOMContentLoaded", function () {
     const remisesCurrentEl = document.getElementById("pos-remises-current");
     const shiftDataEl = document.getElementById("pos-shift");
     const searchInput = document.getElementById("search-product");
-    const pyromaneOrdersEl = document.getElementById("pyromane-orders");
-    const pyromaneButton = document.getElementById("btn-pyromane");
-    const pyromaneCountBadge = document.querySelector("[data-role='pyromane-count']");
+    const pyromaneOrdersEl = null;
+    const pyromaneButton = null;
+    const pyromaneCountBadge = null;
     const miniFourButton = document.getElementById("btn-mini-four");
     const miniFourCountBadge = document.querySelector("[data-role='mini-four-count']");
+    const posTopbar = document.querySelector(".pos-topbar");
+    const posMenus = Array.from(document.querySelectorAll(".pos-menu"));
+    const shiftSummaryEl = document.getElementById("pos-shift-summary");
+    const shiftChangeBtn = document.getElementById("btn-shift-change");
+    const shiftCloseBtn = document.getElementById("btn-shift-close");
     let pyromaneList = document.getElementById("pyromane-list");
     let pyromaneSearch = document.getElementById("pyromane-search");
     let pyromaneRefresh = document.getElementById("pyromane-refresh");
-    const pyromaneActiveBox = document.getElementById("pyromane-active");
-    const pyromaneRemoveBtn = document.getElementById("pyromane-remove");
-    const pyromaneHistoryBtn = document.getElementById("pyromane-history");
-    const pyromaneModifiedBadge = document.querySelector("[data-role='pyromane-modified']");
+    const pyromaneActiveBox = null;
+    const pyromaneRemoveBtn = null;
+    const pyromaneHistoryBtn = null;
+    const pyromaneModifiedBadge = null;
 
     if (!productList || !list || !subtotalElem || !totalElem || !payBtn || !cardBox || !modalContainer || !csrfToken) {
         return;
@@ -68,13 +73,6 @@ document.addEventListener("DOMContentLoaded", function () {
         shiftData = JSON.parse(shiftDataEl.textContent || "{}");
     }
     let pyromaneOrders = [];
-    if (pyromaneOrdersEl) {
-        const raw = JSON.parse(pyromaneOrdersEl.textContent || "[]");
-        pyromaneOrders = Array.isArray(raw)
-            ? raw
-            : (raw && Array.isArray(raw.orders) ? raw.orders : []);
-    }
-
     let activeVoucher = null;
     let activePyromaneOrder = null;
     let pyromaneModalInterval = null;
@@ -91,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
             expensesButton,
             resaleStockButton,
             arStockButton,
+            shiftCloseBtn,
         ];
         buttonsToLock.forEach((btn) => {
             if (!btn) return;
@@ -99,6 +98,68 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.classList.toggle("pointer-events-none", locked);
         });
     }
+
+    function updateStickyOffsets() {
+        if (!posTopbar) return;
+        const topbarHeight = Math.ceil(posTopbar.getBoundingClientRect().height || 72);
+        document.documentElement.style.setProperty("--pos-topbar-height", `${topbarHeight}px`);
+    }
+
+    function getShiftLabel(value) {
+        const normalized = (value || "").toUpperCase();
+        if (normalized === "SOIR") return "Soir";
+        if (normalized === "MATIN") return "Matin";
+        return "";
+    }
+
+    function updateShiftSummary() {
+        if (!shiftSummaryEl) return;
+        const timeShift = getShiftLabel(shiftData.time_shift || "MATIN");
+        const shiftValue = (shiftData.shift || "").toUpperCase();
+        const cashier = (shiftData.cashier || "").trim();
+
+        if (!shiftValue) {
+            if (timeShift === "Soir") {
+                shiftSummaryEl.textContent = "Aucun shift ouvert · proposition automatique : Soir";
+            } else {
+                shiftSummaryEl.textContent = "Ouverture rapide activée · le shift matin démarre automatiquement";
+            }
+            return;
+        }
+
+        const parts = [`Shift ${getShiftLabel(shiftValue)}`];
+        parts.push(shiftData.is_closed ? "clôturé" : "ouvert");
+        if (cashier) {
+            parts.push(cashier);
+        }
+        shiftSummaryEl.textContent = parts.join(" · ");
+    }
+
+    updateStickyOffsets();
+    window.addEventListener("resize", updateStickyOffsets);
+    posMenus.forEach((menu) => {
+        menu.addEventListener("toggle", () => {
+            if (menu.open) {
+                posMenus.forEach((otherMenu) => {
+                    if (otherMenu !== menu) {
+                        otherMenu.removeAttribute("open");
+                    }
+                });
+            }
+        });
+        menu.querySelectorAll(".pos-menu-item").forEach((item) => {
+            item.addEventListener("click", () => {
+                menu.removeAttribute("open");
+            });
+        });
+    });
+    document.addEventListener("click", (event) => {
+        posMenus.forEach((menu) => {
+            if (!menu.contains(event.target)) {
+                menu.removeAttribute("open");
+            }
+        });
+    });
 
     async function selectShift(shift, force = false) {
         const res = await fetch("/pos/shift/select/", {
@@ -126,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         shiftData = data.shift_data || shiftData;
+        updateShiftSummary();
         setShiftLock(false);
         modalContainer.innerHTML = "";
         window.location.reload();
@@ -134,14 +196,30 @@ document.addEventListener("DOMContentLoaded", function () {
     function openShiftModal(mode = "select", timeShiftOverride = null) {
         if (!modalContainer) return;
         const timeShift = timeShiftOverride || shiftData.time_shift || "MATIN";
-        const isConfirm = mode === "confirm";
-        const allowMorning = isConfirm || timeShift === "MATIN";
-        const allowEvening = isConfirm || timeShift === "SOIR";
-        const showForceMorning = !isConfirm && timeShift === "SOIR";
-        const title = isConfirm ? "Changement de shift" : "Choisir votre shift";
-        const desc = isConfirm
-            ? "Il est après 15h. Continuer le matin ou passer au soir ?"
+        const isEveningPrompt = mode === "confirm";
+        const allowMorning = !isEveningPrompt && timeShift === "MATIN";
+        const allowEvening = !isEveningPrompt && timeShift === "SOIR";
+        const title = isEveningPrompt ? "Passer au shift du soir ?" : "Choisir votre shift";
+        const desc = isEveningPrompt
+            ? "Le système propose le soir pour aller plus vite. Si la relève est en retard, gardez le matin."
             : "Sélectionnez le shift qui correspond à votre poste actuel.";
+        const actionMarkup = isEveningPrompt
+            ? `
+                <button type="button" data-shift="SOIR" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 py-2">
+                    Oui, ouvrir le soir
+                </button>
+                <button type="button" data-shift="MATIN" data-force="1" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background hover:bg-accent h-10 px-4 py-2">
+                    Rester matin (retard)
+                </button>
+            `
+            : `
+                <button type="button" data-shift="MATIN" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all ${allowMorning ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border bg-background text-muted-foreground"} h-10 px-4 py-2" ${allowMorning ? "" : "disabled"}>
+                    Matin
+                </button>
+                <button type="button" data-shift="SOIR" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all ${allowEvening ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border bg-background text-muted-foreground"} h-10 px-4 py-2" ${allowEvening ? "" : "disabled"}>
+                    Ouvrir le soir
+                </button>
+            `;
 
         modalContainer.innerHTML = `
             <div role="dialog" aria-labelledby="shift-title" data-state="open" data-slot="dialog-content" class="modal-custom bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border p-6 shadow-lg duration-200 sm:max-w-[420px]" tabindex="-1" style="pointer-events: auto">
@@ -150,17 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <p class="text-sm text-muted-foreground">${desc}</p>
                 </div>
                 <div class="grid gap-3">
-                    <button type="button" data-shift="MATIN" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all ${allowMorning ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border bg-background text-muted-foreground"} h-10 px-4 py-2" ${allowMorning ? "" : "disabled"}>
-                        Matin
-                    </button>
-                    <button type="button" data-shift="SOIR" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all ${allowEvening ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border bg-background text-muted-foreground"} h-10 px-4 py-2" ${allowEvening ? "" : "disabled"}>
-                        Soir
-                    </button>
-                    ${showForceMorning ? `
-                        <button type="button" data-shift="MATIN" data-force="1" class="shift-select-btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border bg-background hover:bg-accent h-9 px-4 py-2">
-                            Forcer matin (retard)
-                        </button>
-                    ` : ""}
+                    ${actionMarkup}
                 </div>
             </div>
         `;
@@ -229,11 +297,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function initShiftSelection() {
+    async function initShiftSelection() {
+        updateShiftSummary();
         const shiftValue = (shiftData.shift || "").toUpperCase();
         if (!shiftValue) {
             setShiftLock(true);
-            openShiftModal("select");
+            const timeShift = (shiftData.time_shift || "MATIN").toUpperCase();
+            if (timeShift === "MATIN") {
+                await selectShift("MATIN");
+                return;
+            }
+            openShiftModal("confirm", timeShift);
             return;
         }
         if (shiftData.needs_confirm) {
@@ -241,11 +315,39 @@ document.addEventListener("DOMContentLoaded", function () {
             openShiftModal("confirm", shiftData.time_shift);
             return;
         }
-        setShiftLock(false);
+        if (shiftData.is_closed) {
+            setShiftLock(true);
+        } else {
+            setShiftLock(false);
+        }
+        if (shiftData.logout_blocked) {
+            openInfoModal({
+                title: "Clôturez le shift",
+                message: "Le shift est terminé. Veuillez le clôturer avant de vous déconnecter.",
+                tone: "warning",
+            });
+        }
     }
 
     renderScanPrompt();
     initShiftSelection();
+
+    if (shiftChangeBtn) {
+        shiftChangeBtn.addEventListener("click", () => {
+            const timeShift = (shiftData.time_shift || "MATIN").toUpperCase();
+            const currentShift = (shiftData.shift || "").toUpperCase();
+            if (timeShift === "SOIR" && currentShift !== "SOIR") {
+                openShiftModal("confirm", timeShift);
+                return;
+            }
+            const readyShiftLabel = getShiftLabel(currentShift || timeShift || "MATIN").toLowerCase();
+            openInfoModal({
+                title: "Shift déjà prêt",
+                message: `Le POS est déjà positionné sur le shift du ${readyShiftLabel}.`,
+                tone: "info",
+            });
+        });
+    }
 
     function toInt(value) {
         return parseInt(value, 10) || 0;
@@ -262,6 +364,28 @@ document.addEventListener("DOMContentLoaded", function () {
             return 0;
         }
         return Math.floor((normalized + carry) / POINT_EARN_STEP);
+    }
+
+    function shouldBlockLogout() {
+        if (!shiftData || !shiftData.shift) {
+            return false;
+        }
+        if (shiftData.is_closed) {
+            return false;
+        }
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        const isAfter = (limitHour) =>
+            hour > limitHour || (hour === limitHour && minute >= 0);
+        const shiftValue = (shiftData.shift || "").toUpperCase();
+        if (shiftValue === "MATIN") {
+            return isAfter(14);
+        }
+        if (shiftValue === "SOIR") {
+            return isAfter(22);
+        }
+        return false;
     }
 
     function maxRedeemablePoints(amount) {
@@ -836,37 +960,77 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    if (pyromaneRemoveBtn) {
-        pyromaneRemoveBtn.addEventListener("click", () => {
+    if (shiftCloseBtn) {
+        shiftCloseBtn.addEventListener("click", () => {
+            if (!shiftData || !shiftData.shift) {
+                openShiftModal("select");
+                return;
+            }
+            if (shiftData.is_closed) {
+                openInfoModal({
+                    title: "Shift déjà clôturé",
+                    message: "Ce shift est déjà clôturé.",
+                });
+                return;
+            }
             openConfirmModal({
-                title: "Annuler la commande",
-                message: "Cette action va annuler totalement la commande Pyromane. Continuer ?",
-                confirmLabel: "Annuler la commande",
-                cancelLabel: "Garder",
-                onConfirm: cancelActivePyromaneOrder,
+                title: "Clôturer le shift",
+                message: "Vous confirmez la clôture du shift ? Cette action verrouille la saisie.",
+                confirmLabel: "Clôturer",
+                cancelLabel: "Annuler",
+                onConfirm: async () => {
+                    try {
+                        const res = await fetch("/pos/shift/close/", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken.value,
+                            },
+                            body: JSON.stringify({
+                                date: shiftData.date,
+                                shift: shiftData.shift,
+                                close_only: true,
+                            }),
+                        });
+                        const data = await window.safeJson(res);
+                        if (!data || !data.success) {
+                            throw new Error((data && data.error) || "Impossible de clôturer.");
+                        }
+                        shiftData.is_closed = true;
+                        updateShiftSummary();
+                        setShiftLock(true);
+                        openInfoModal({
+                            title: "Shift clôturé",
+                            message: "Le shift est maintenant clôturé.",
+                            tone: "success",
+                        });
+                    } catch (error) {
+                        openInfoModal({
+                            title: "Erreur",
+                            message: error.message || "Impossible de clôturer le shift.",
+                            tone: "error",
+                        });
+                    }
+                },
             });
         });
     }
 
-    if (pyromaneHistoryBtn) {
-        pyromaneHistoryBtn.addEventListener("click", () => {
-            openPyromaneHistoryModal();
+    if (logoutButton) {
+        logoutButton.addEventListener("click", (event) => {
+            if (shouldBlockLogout()) {
+                event.preventDefault();
+                openInfoModal({
+                    title: "Clôturez le shift",
+                    message: "Veuillez clôturer le shift avant de vous déconnecter.",
+                    tone: "warning",
+                });
+            }
         });
     }
 
-    if (pyromaneButton) {
-        pyromaneButton.addEventListener("click", openPyromaneModal);
-    }
-
-    updateActionBadge(pyromaneButton, pyromaneCountBadge, pyromaneOrders.length);
-    refreshPyromaneOrders();
     refreshMiniFourCount();
     const POS_REFRESH_INTERVAL = 5000;
-    setInterval(() => {
-        if (!document.hidden) {
-            refreshPyromaneOrders();
-        }
-    }, POS_REFRESH_INTERVAL);
     setInterval(() => {
         if (!document.hidden) {
             refreshMiniFourCount();
@@ -875,7 +1039,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
-            refreshPyromaneOrders();
             refreshMiniFourCount();
         }
     });
@@ -985,7 +1148,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (clearBtn) {
         clearBtn.addEventListener("click", function () {
             list.innerHTML = "";
-            clearActivePyromane();
             updateTotals();
         });
     }
@@ -1005,6 +1167,7 @@ document.addEventListener("DOMContentLoaded", function () {
             success: "bg-green-50 border-green-200 text-green-700",
             error: "bg-red-50 border-red-200 text-red-700",
             info: "bg-amber-50 border-amber-200 text-amber-700",
+            warning: "bg-amber-50 border-amber-200 text-amber-700",
         };
         const badgeClass = toneStyles[tone] || toneStyles.info;
 
@@ -1431,6 +1594,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function openRemisesModal() {
+        const isMorningShift = (shiftData.shift || "").toUpperCase() === "MATIN";
+        const remisesDescription = isMorningShift
+            ? "Le matin, les produits durables reprennent le reste d'hier soir. Les autres démarrent à 0, mais tout reste modifiable."
+            : "Le soir, tous les produits reprennent le reste du matin, avec possibilité de corriger chaque quantité.";
         const remiseRows = remiseProducts
             .filter((product) => !baseProductIds.has(product.id))
             .filter((product) => !shiftExclusionTypes.has((product.product_type || "").toLowerCase()))
@@ -1439,7 +1606,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const currentValue = remisesCurrent[String(product.id)];
             const defaultValue = currentValue !== undefined
                 ? currentValue
-                : (isDurable ? (remisesDefaults[String(product.id)] ?? 0) : 0);
+                : (remisesDefaults[String(product.id)] ?? 0);
             const alreadySetBadge = currentValue !== undefined
                 ? `<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Déjà saisi</span>`
                 : "";
@@ -1471,7 +1638,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div role="dialog" aria-describedby="remises-desc" aria-labelledby="remises-title" data-state="open" data-slot="dialog-content" class="modal-custom bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-[520px]" tabindex="-1" style="pointer-events: auto">
                 <div data-slot="dialog-header" class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 id="remises-title" data-slot="dialog-title" class="text-lg leading-none font-semibold">Remises (stock restant)</h2>
-                    <p id="remises-desc" class="text-sm text-muted-foreground">Les produits durables sont préremplis. Les autres restent à 0 (modifiables si besoin).</p>
+                    <p id="remises-desc" class="text-sm text-muted-foreground">${remisesDescription}</p>
                 </div>
                 <form class="grid gap-4" id="remisesForm">
                     <div class="max-h-64 overflow-y-auto rounded-md border p-3 space-y-2">
@@ -2285,7 +2452,6 @@ document.addEventListener("DOMContentLoaded", function () {
             voucher_code: state.voucherCode,
             issue_change_voucher: state.issueChangeVoucher,
             cash_received: state.cashReceived,
-            pyromane_order_id: activePyromaneOrder ? activePyromaneOrder.id : null,
         };
 
         finalizeTransaction(payload);
@@ -2315,7 +2481,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             "Content-Type": "application/json",
                             "X-CSRFToken": csrfToken.value,
                         },
-                        body: JSON.stringify(payload),
+                        body: JSON.stringify({
+                            ...payload,
+                            transaction_id: r.transaction_id,
+                        }),
                     });
 
                     const data = await response.json();
@@ -2324,28 +2493,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         const prn = data.text;
                         const intent = "intent:" + encodeURIComponent(prn) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
                         window.location.href = intent;
-
-                        const vouchers = Array.isArray(r.vouchers_to_print) ? r.vouchers_to_print : [];
-                        if (vouchers.length) {
-                            for (const voucher of vouchers) {
-                                const voucherResp = await fetch("/pos/voucher/print/", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRFToken": csrfToken.value,
-                                    },
-                                    body: JSON.stringify({ code: voucher.code }),
-                                });
-                                const voucherData = await voucherResp.json();
-                                if (voucherData.success && voucherData.text) {
-                                    const voucherIntent = "intent:" + encodeURIComponent(voucherData.text) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
-                                    window.location.href = voucherIntent;
-                                    await new Promise(resolve => setTimeout(resolve, 900));
-                                } else {
-                                    alert(voucherData.error || "Erreur lors de l'impression du bon.");
-                                }
-                            }
-                        }
 
                         setTimeout(() => {
                             window.location.reload();
@@ -2416,7 +2563,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const productGrid = document.getElementById("list-product");
     const listProducts = Array.from(productGrid.children);
-    const itemsPerPage = 12;
+    const itemsPerPage = 24;
     let currentPage = 1;
     const totalRows = listProducts.length;
     const totalPages = Math.ceil(totalRows / itemsPerPage);
