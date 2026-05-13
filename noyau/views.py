@@ -27,6 +27,7 @@ from noyau.models import (
     BakerySale,
     BakerySaleItem,
     BakeryProduction,
+    ComptoirTable,
     BakeryRecipe,
     BakeryRecipeItem,
     Employer,
@@ -363,6 +364,21 @@ def can_manage_pos_shift_reports(user):
             "noyau.delete_posshiftreport",
         )
     )
+
+
+def serialize_comptoir_table(table):
+    updated_at_local = timezone.localtime(table.updated_at) if table.updated_at else None
+    return {
+        "id": table.id,
+        "zone": table.zone,
+        "zone_label": table.get_zone_display(),
+        "number": table.number,
+        "code": table.code,
+        "is_active": bool(table.is_active),
+        "status_label": "Active" if table.is_active else "Inactive",
+        "note": table.note or "",
+        "updated_at_label": updated_at_local.strftime("%d/%m/%Y %H:%M") if updated_at_local else "—",
+    }
 
 
 def build_secure_id_for_employer(employer):
@@ -8894,6 +8910,118 @@ def view_sale(request):
         },
     }
     return render(request, "sale/view_sale.html", context)
+
+
+@permission_required("noyau.view_comptoirtable", raise_exception=True)
+def view_comptoir_tables(request):
+    tables_qs = ComptoirTable.objects.all().order_by("zone", "number")
+    serialized_tables = [serialize_comptoir_table(table) for table in tables_qs]
+    zone_choices = [
+        {"code": code, "label": label}
+        for code, label in ComptoirTable.ZONE_CHOICES
+    ]
+
+    active_count = tables_qs.filter(is_active=True).count()
+    context = {
+        **build_user_context(request),
+        "tables": serialized_tables,
+        "zone_choices": zone_choices,
+        "table_summary": {
+            "total": tables_qs.count(),
+            "active": active_count,
+            "inactive": tables_qs.count() - active_count,
+        },
+        "can_add_tables": request.user.has_perm("noyau.add_comptoirtable"),
+        "can_change_tables": request.user.has_perm("noyau.change_comptoirtable"),
+        "can_delete_tables": request.user.has_perm("noyau.delete_comptoirtable"),
+    }
+    return render(request, "pos/view_comptoir_tables.html", context)
+
+
+def _parse_comptoir_table_payload(request):
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return None, JsonResponse({"success": False, "error": "Données invalides."}, status=400)
+
+    zone = (payload.get("zone") or "").strip().upper()
+    valid_zones = {choice for choice, _ in ComptoirTable.ZONE_CHOICES}
+    if zone not in valid_zones:
+        return None, JsonResponse({"success": False, "error": "Zone invalide."}, status=400)
+
+    try:
+        number = int(payload.get("number"))
+    except (TypeError, ValueError):
+        return None, JsonResponse({"success": False, "error": "Numéro de table invalide."}, status=400)
+
+    if number <= 0:
+        return None, JsonResponse({"success": False, "error": "Le numéro doit être supérieur à zéro."}, status=400)
+
+    normalized = {
+        "zone": zone,
+        "number": number,
+        "is_active": parse_bool(payload.get("is_active"), True),
+        "note": (payload.get("note") or "").strip(),
+    }
+    return normalized, None
+
+
+@permission_required("noyau.add_comptoirtable", raise_exception=True)
+def create_comptoir_table(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    payload, error_response = _parse_comptoir_table_payload(request)
+    if error_response:
+        return error_response
+
+    if ComptoirTable.objects.filter(zone=payload["zone"], number=payload["number"]).exists():
+        return JsonResponse({"success": False, "error": "Cette table existe déjà."}, status=400)
+
+    table = ComptoirTable.objects.create(**payload)
+    return JsonResponse({"success": True, "table": serialize_comptoir_table(table)})
+
+
+@permission_required("noyau.view_comptoirtable", raise_exception=True)
+def get_comptoir_table(request, table_id):
+    table = get_object_or_404(ComptoirTable, id=table_id)
+    return JsonResponse({"success": True, "table": serialize_comptoir_table(table)})
+
+
+@permission_required("noyau.change_comptoirtable", raise_exception=True)
+def update_comptoir_table(request, table_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    table = get_object_or_404(ComptoirTable, id=table_id)
+    payload, error_response = _parse_comptoir_table_payload(request)
+    if error_response:
+        return error_response
+
+    duplicate_exists = ComptoirTable.objects.filter(
+        zone=payload["zone"],
+        number=payload["number"],
+    ).exclude(id=table.id).exists()
+    if duplicate_exists:
+        return JsonResponse({"success": False, "error": "Cette table existe déjà."}, status=400)
+
+    table.zone = payload["zone"]
+    table.number = payload["number"]
+    table.is_active = payload["is_active"]
+    table.note = payload["note"]
+    table.save(update_fields=["zone", "number", "is_active", "note", "updated_at"])
+    return JsonResponse({"success": True, "table": serialize_comptoir_table(table)})
+
+
+@permission_required("noyau.delete_comptoirtable", raise_exception=True)
+def delete_comptoir_table(request, table_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Méthode non autorisée."}, status=405)
+
+    table = get_object_or_404(ComptoirTable, id=table_id)
+    deleted_code = table.code
+    table.delete()
+    return JsonResponse({"success": True, "deleted_id": table_id, "deleted_code": deleted_code})
 
 
 def view_pos_shift_reports(request):

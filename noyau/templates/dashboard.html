@@ -72,6 +72,23 @@
       </a>
     {% endif %}
 
+    {% if 'noyau.view_comptoirtable' in user.get_all_permissions %}
+      <a href="{% url 'view_comptoir_tables' %}" class="module-card">
+        <div class="module-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="M3 10h18"></path>
+            <path d="M9 20V10"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="module-title">Tables comptoir</div>
+          <div class="module-subtitle">Organisation A, B, VIP et Terrasse</div>
+        </div>
+        <div class="module-link">Accéder au module →</div>
+      </a>
+    {% endif %}
+
     {% if 'noyau.view_rawmaterial' in user.get_all_permissions %}
       <a href="{% url 'view_rawmaterial' %}" class="module-card">
         <div class="module-icon">

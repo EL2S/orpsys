@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block script %}pos/view_comptoir_tables.js{% endblock %}
+
+{% block content %}
+<div
+    class="comptoir-page"
+    id="comptoirTablesPage"
+    data-can-add="{% if can_add_tables %}true{% else %}false{% endif %}"
+    data-can-change="{% if can_change_tables %}true{% else %}false{% endif %}"
+    data-can-delete="{% if can_delete_tables %}true{% else %}false{% endif %}"
+    data-template-a="{% static 'template/TABLE A.pdf' %}"
+    data-template-b="{% static 'template/TABLE B.pdf' %}"
+    data-template-vip="{% static 'template/TABLE VIP.pdf' %}"
+    data-template-ter="{% static 'template/TABLE TER.pdf' %}"
+>
+    <div class="comptoir-header">
+        <div class="comptoir-title-group">
+            <a
+                href="{% url 'view_pos' %}"
+                class="comptoir-back-button"
+                aria-label="Retour à la caisse"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+            <div>
+                <h1>Tables comptoir</h1>
+                <p>Organisation rapide des tables A, B, VIP et TER.</p>
+            </div>
+        </div>
+        <div class="comptoir-header-actions">
+            <div class="comptoir-format-pill">A1 · B1 · VIP1 · TER1</div>
+            {% if can_add_tables %}
+            <button id="createTableButton" class="comptoir-primary-button" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                </svg>
+                Nouvelle table
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="comptoir-metrics">
+        <div class="comptoir-metric">
+            <span>Total</span>
+            <strong id="tableSummaryTotal">{{ table_summary.total }}</strong>
+        </div>
+        <div class="comptoir-metric">
+            <span>Actives</span>
+            <strong id="tableSummaryActive">{{ table_summary.active }}</strong>
+        </div>
+        <div class="comptoir-metric">
+            <span>Inactives</span>
+            <strong id="tableSummaryInactive">{{ table_summary.inactive }}</strong>
+        </div>
+        <div class="comptoir-metric comptoir-metric-wide">
+            <span>Affichage</span>
+            <strong id="tableSummaryZone">Toutes</strong>
+            <small id="tableSummaryVisible">{{ table_summary.total }} table(s) visibles</small>
+        </div>
+    </div>
+
+    <div class="comptoir-toolbar">
+        <div class="comptoir-zone-tabs" id="tableZoneFilters">
+            <button type="button" class="table-zone-filter is-active" data-zone="">Toutes</button>
+            {% for zone in zone_choices %}
+            <button type="button" class="table-zone-filter" data-zone="{{ zone.code }}">{{ zone.label }}</button>
+            {% endfor %}
+        </div>
+        <div class="comptoir-search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21 21-4.34-4.34"></path>
+                <circle cx="11" cy="11" r="8"></circle>
+            </svg>
+            <input id="tableSearchInput" type="search" placeholder="Rechercher A1, VIP2, TER..." />
+        </div>
+    </div>
+
+    <div id="tableGrid" class="comptoir-table-grid">
+        {% for table in tables %}
+        <article
+            class="comptoir-table-tile{% if not table.is_active %} is-inactive{% endif %}"
+            data-table-id="{{ table.id }}"
+            data-zone="{{ table.zone }}"
+            data-code="{{ table.code }}"
+            data-status="{% if table.is_active %}ACTIVE{% else %}INACTIVE{% endif %}"
+            data-search="{{ table.code }} {{ table.zone_label }} {{ table.note }}"
+        >
+            <div class="comptoir-tile-top">
+                <span class="comptoir-zone-badge">{{ table.zone_label }}</span>
+                <span class="comptoir-status-badge{% if table.is_active %} is-active{% else %} is-inactive{% endif %}">
+                    {{ table.status_label }}
+                </span>
+            </div>
+            <div class="comptoir-table-code">{{ table.code }}</div>
+            <div class="comptoir-table-details">
+                <span>Table {{ table.number }}</span>
+                <span>{{ table.updated_at_label }}</span>
+            </div>
+            <div class="comptoir-table-note" title="{{ table.note|default:'Aucune note' }}">
+                {% if table.note %}{{ table.note }}{% else %}Aucune note{% endif %}
+            </div>
+            <div class="comptoir-table-actions">
+                <button type="button" class="table-card-button card-button comptoir-icon-button is-card" data-id="{{ table.id }}" aria-label="Télécharger la fiche de la table {{ table.code }}" title="Télécharger la fiche">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <path d="M7 11h10M7 8h10M7 14h7M4 3h16v18l-8-4-8 4V3z"></path>
+                    </svg>
+                </button>
+                {% if can_change_tables %}
+                <button type="button" class="table-edit-button comptoir-icon-button" data-id="{{ table.id }}" aria-label="Modifier la table {{ table.code }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.37 2.63a2.12 2.12 0 1 1 3 3L12 15l-4 1 1-4Z"></path>
+                    </svg>
+                </button>
+                {% endif %}
+                {% if can_delete_tables %}
+                <button type="button" class="table-delete-button comptoir-icon-button is-danger" data-id="{{ table.id }}" aria-label="Supprimer la table {{ table.code }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <div id="tableEmptyState" class="comptoir-empty-state hidden">
+        <div class="comptoir-empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <path d="M7 8h10"></path>
+                <path d="M7 12h6"></path>
+            </svg>
+        </div>
+        <h2>Aucune table trouvée</h2>
+        <p>Change la zone ou crée une nouvelle table pour commencer.</p>
+    </div>
+</div>
+
+<div id="modalContainer"></div>
+{{ tables|json_script:"comptoir-tables-json" }}
+{{ zone_choices|json_script:"comptoir-zones-json" }}
+{% endblock %}

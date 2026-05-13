@@ -17,6 +17,39 @@ class AiAssistant(models.Model):
 class Pos(models.Model):
     pass
 
+
+class ComptoirTable(models.Model):
+    ZONE_A = "A"
+    ZONE_B = "B"
+    ZONE_VIP = "VIP"
+    ZONE_TER = "TER"
+    ZONE_CHOICES = [
+        (ZONE_A, "A"),
+        (ZONE_B, "B"),
+        (ZONE_VIP, "VIP"),
+        (ZONE_TER, "TER"),
+    ]
+
+    zone = models.CharField(max_length=10, choices=ZONE_CHOICES)
+    number = models.PositiveIntegerField()
+    is_active = models.BooleanField(default=True)
+    note = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["zone", "number"]
+        constraints = [
+            models.UniqueConstraint(fields=["zone", "number"], name="uniq_comptoir_table_zone_number"),
+        ]
+
+    def __str__(self):
+        return f"{self.zone}{self.number}"
+
+    @property
+    def code(self):
+        return f"{self.zone}{self.number}"
+
 class Loyalty(models.Model):
     CARD_TYPE_STANDARD = "STANDARD"
     CARD_TYPE_PREMIUM = "PREMIUM"
